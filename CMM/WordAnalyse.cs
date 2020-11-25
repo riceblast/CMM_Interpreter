@@ -36,7 +36,7 @@ namespace CMM
 
         private static string[] words = { "if", "else", "while", "read", "write", "int", "real" };
 
-        private static string[] special = { "+", "-", "*", "/", "=", "<", ">", "==", "<>", "(", ")", ";", "{", "}", "/*", "*/", "[", "]", ",", "." };
+        private static string[] specials = { "+", "-", "*", "/", "=", "<", ">", "==", "<>", "(", ")", ";", "{", "}", "/*", "*/", "[", "]", ",", "." };
 
 
         //public static int analyse(string word)
@@ -90,7 +90,7 @@ namespace CMM
         //    }
         //}
 
-        public static List<(string, int)> analyse(string input)
+        public static List<(string, int)> Analyse(string input)
         {
             //MatchCollection mc = Regex.Matches(input, @"/\*[\w\W]*?\*/|\S+");
             //foreach (Match m in mc)
@@ -103,93 +103,98 @@ namespace CMM
             string buffer;
             int length = input.Length;
             int sStart = words.Length;
-            int oStart = sStart + special.Length;
+            int oStart = sStart + specials.Length;
 
             for (int index = 0; index < length; index++)
             {
-                currunt = input[index];
-                buffer = currunt.ToString();
-
-                if (Array.IndexOf(special, buffer) != -1)
+                try
                 {
-                    switch (currunt)
+                    currunt = input[index];
+                    buffer = currunt.ToString();
+
+                    if (Array.IndexOf(specials, buffer) != -1)
                     {
-                        case '=':
-                        case '<':
-                            if (index + 1 == length)
-                                break;
-                            currunt = input[index + 1];
-                            if (Array.IndexOf(special, buffer + currunt) != -1)
-                            {
-                                buffer += currunt;
-                                index++;
-                            }
-                            tokens.Add((buffer, Array.IndexOf(special, buffer) + sStart));
-                            break;
-                        case '/':
-                            if (index + 1 == length)
-                                break;
-                            if (input[index + 1] == '*')
-                            {
-                                index++;
-                                while (++index < length)
+                        switch (currunt)
+                        {
+                            case '=':
+                            case '<':
+                                currunt = input[index + 1];
+                                if (Array.IndexOf(specials, buffer + currunt) != -1)
                                 {
-                                    while (input[index] != '*')
-                                        continue;
-                                    if (input[index + 1] == '/')
-                                    {
-                                        index++;
-                                        break;
-                                    }
+                                    buffer += currunt;
+                                    index++;
                                 }
+                                goto default;
+                            case '/':
+                                if (input[index + 1] == '*')
+                                {
+                                    index++;
+                                    while (++index < length)
+                                    {
+                                        if (input[index] != '*')
+                                            continue;
+                                        if (input[index + 1] == '/')
+                                        {
+                                            index++;
+                                            break;
+                                        }
+                                    }
+                                    break;
+                                }
+                                else
+                                    goto default;
+                            default:
+                                tokens.Add((buffer, Array.IndexOf(specials, buffer) + sStart));
+                                break;
+                        }
+
+                    }
+                    else if (Char.IsDigit(currunt))
+                    {
+                        while (++index < length)
+                        {
+                            currunt = input[index];
+                            if (!Char.IsDigit(currunt) && currunt != '.')
+                            {
+                                index--;
+                                break;
                             }
-                            break;
-                        default:
-                            tokens.Add((buffer, Array.IndexOf(special, buffer) + sStart));
-                            break;
-                    }
-                }
-                else if (Char.IsDigit(currunt))
-                {
-                    while (++index < length)
-                    {
-                        currunt = input[index];
-                        if (!Char.IsDigit(currunt) && currunt != '.')
-                        {
-                            index--;
-                            break;
+                            buffer += currunt;
                         }
-                        buffer += currunt;
-                    }
-                    if (buffer.Contains('.'))
-                        tokens.Add((buffer, oStart + 1));
+                        if (buffer.Contains('.'))
+                            tokens.Add((buffer, oStart + 1));
 
-                    tokens.Add((buffer, oStart));
-                }
-                else if (Char.IsLetter(currunt))
-                {
-                    while (++index < length)
-                    {
-                        currunt = input[index];
-                        if (!Char.IsLetterOrDigit(currunt) && currunt != '_')
-                        {
-                            index--;
-                            break;
-                        }
-                        buffer += currunt;
+                        tokens.Add((buffer, oStart));
                     }
-                    int t = Array.IndexOf(words, buffer);
-                    if (t != -1)
-                        tokens.Add((buffer, t));
-                    else if (buffer.Last() == '_') ;
+                    else if (Char.IsLetter(currunt))
+                    {
+                        while (++index < length)
+                        {
+                            currunt = input[index];
+                            if (!Char.IsLetterOrDigit(currunt) && currunt != '_')
+                            {
+                                index--;
+                                break;
+                            }
+                            buffer += currunt;
+                        }
+                        int t = Array.IndexOf(words, buffer);
+                        if (t != -1)
+                            tokens.Add((buffer, t));
+                        else if (buffer.Last() == '_') ;
+                        else
+                            tokens.Add((buffer, oStart + 1));
+                    }
+                    else if (Char.IsWhiteSpace(currunt))
+                        continue;
                     else
-                        tokens.Add((buffer, oStart + 1));
-                }
-                else if (Char.IsWhiteSpace(currunt))
-                    continue;
-                else
-                    throw new Exception();
+                        throw new Exception($"第{index}个字符有误");
 
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
             }
 
             return tokens;

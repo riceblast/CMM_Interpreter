@@ -27,7 +27,7 @@
                     <MenuItem Header="自动换行"></MenuItem>
                 </MenuItem>
                 <MenuItem Header="启动">
-                    <MenuItem Header="run" Click="run"></MenuItem>
+                    <MenuItem Header="run" Click="Run"></MenuItem>
                     <MenuItem Header="debug"></MenuItem>
                 </MenuItem>
                 <MenuItem Header="帮助">

@@ -173,12 +173,12 @@ namespace CMM
                 MessageBox.Show(this.ToString());
             }
         }
-        private void run(object sender, RoutedEventArgs e)
+        private void Run(object sender, RoutedEventArgs e)
         {
             inputstr = input.Text;
 
 
-            tokens = WordAnalyse.analyse(inputstr);
+            tokens = WordAnalyse.Analyse(inputstr);
 
             foreach ((string value, int id) in tokens)
             {
