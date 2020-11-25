@@ -39,23 +39,24 @@ namespace CMM
             set { filePath = value; }
         }
 
-        List<KeyValuePair<string, int>> kv = new List<KeyValuePair<string, int>>();
+        List<(string, int)> tokens;
+
         public MainWindow()
         {
             InitializeComponent();
 
 
-            string a = @"ii98989_ fsd___fsaf fdsafasfd0 12 12.9 12.0 22. bb[] a[11] { } /* sssssssss */  /* Com
-             * me
-             * n
-             * 
-             * t
-             * 
-             * s..
-             * . 
-             */
-             12
-               1";
+            //string a = @"ii98989_ fsd___fsaf fdsafasfd0 12 12.9 12.0 22. bb[] a[11] { } /* sssssssss */  /* Com
+            // * me
+            // * n
+            // * 
+            // * t
+            // * 
+            // * s..
+            // * . 
+            // */
+            // 12
+            //   1";
             
         }
 
@@ -75,19 +76,20 @@ namespace CMM
             if (ofd.ShowDialog() == true)
             {
                 FilePath = ofd.FileName;
+                FileStream file = new FileStream(FilePath, FileMode.Open, FileAccess.ReadWrite);
+                StreamReader reader = new StreamReader(file, System.Text.Encoding.Default);
+                string str = reader.ReadToEnd();                    // 如果没有System.Text.Encoding.Default  会出现编码问题
+                reader.Close();
+                file.Close();
+                input.Text = str;
+                //inputstr = str;
             }
             else
             {
                 MessageBox.Show("打开文件失败");
             }
 
-            FileStream file = new FileStream(FilePath, FileMode.Open, FileAccess.ReadWrite);
-            StreamReader reader = new StreamReader(file, System.Text.Encoding.Default);
-            string str = reader.ReadToEnd();                    // 如果没有System.Text.Encoding.Default  会出现编码问题
-            reader.Close();
-            file.Close();
-            input.Text = str;
-            inputstr = str;
+            
         }
 
 
@@ -102,7 +104,7 @@ namespace CMM
                 SR_writein.Close();
                 FS_writein.Close();
                 IsSave = true;
-                inputstr = input.Text;
+                //inputstr = input.Text;
             }
             else                                   // 如果该文本文件不存在，则新建文本文件
             {
@@ -116,7 +118,7 @@ namespace CMM
                     SR_writein.Close();
                     FS_writein.Close();
                     IsSave = true;
-                    inputstr = input.Text;
+                    //inputstr = input.Text;
                 }
                 else
                 {
@@ -139,7 +141,7 @@ namespace CMM
                 SR_writein.Close();
                 FS_writein.Close();
                 IsSave = true;
-                inputstr = input.Text;
+                //inputstr = input.Text;
             }
             else
             {
@@ -173,10 +175,14 @@ namespace CMM
         }
         private void run(object sender, RoutedEventArgs e)
         {
-            kv = WordAnalyse.input(inputstr);
-            foreach (KeyValuePair<string, int> item in kv)
+            inputstr = input.Text;
+
+
+            tokens = WordAnalyse.analyse(inputstr);
+
+            foreach ((string value, int id) in tokens)
             {
-                output.Text += kv[1].Key + "\n";
+                output.Text += $"<{value},{id}>\n";
             }
         }
     }

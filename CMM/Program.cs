@@ -9,8 +9,8 @@ namespace CMM
     {
         private void run()
         {
-            int line=1;       //第几行
-            int n=1;          //第几个
+            int line = 1;       //第几行
+            int n = 1;          //第几个
             int count = 0;    //总的表下标
 
             string test = @"a b c d  e f g h  i j k l /*a*/  /*as
@@ -20,33 +20,33 @@ namespace CMM
                a*/
                m n o p";
             //总的表
-            List<KeyValuePair<string, int>> kv = WordAnalyse.input(test);
-            Console.WriteLine("单词" + "    " + "行数" + "    "+"位置");
+            List<(string name, int)> tokens = WordAnalyse.analyse(test);
+            Console.WriteLine("单词" + "    " + "行数" + "    " + "位置");
             //每一行字符串
             System.IO.StringReader sr = new System.IO.StringReader(test);
             string str = sr.ReadLine();
             //每一行的表
-            List<KeyValuePair<string, int>> Tempkv = WordAnalyse.input(str);
+            List<(string name, int)> temp = WordAnalyse.analyse(str);
 
             for (; ; )
             {
                 //每一个单词逐步对应
-                for (int i = 0; i < Tempkv.Count; i++)
+                for (int i = 0; i < temp.Count; i++)
                 {
                     //如果相等，直接打印
-                    if (Tempkv[i].Key == kv[count].Key)
+                    if (temp[i].name == tokens[count].name)
                     {
-                        Console.WriteLine(kv[count].Key + "    " + line + "    " + n);
+                        Console.WriteLine(tokens[count].name + "    " + line + "    " + n);
                         n++;
                         count++;
                     }
                     //如果不相等
                     //1、说明表中下一个单词是多行的
-                    else if (kv[count].Key.IndexOf(Tempkv[i].Key) == 0)
+                    else if (tokens[count].name.IndexOf(temp[i].name) == 0)
                     {
                         //获取多行单词的行数
-                        Console.WriteLine(kv[count].Key + "    " + line + "    " + n);
-                        int t = huanHangCiShu(kv[count].Key);
+                        Console.WriteLine(tokens[count].name + "    " + line + "    " + n);
+                        int t = huanHangCiShu(tokens[count].name);
                         while (t > 1)
                         {
                             str = sr.ReadLine();
@@ -58,7 +58,7 @@ namespace CMM
                     }
                     //2、上一个多行单词“残留”在本行
                     //①只有该残留的单词
-                    else if (Tempkv.Count == 1)
+                    else if (temp.Count == 1)
                     {
                         break;
                     }
@@ -72,11 +72,11 @@ namespace CMM
                 str = sr.ReadLine();
                 if (str == null)
                     break;
-                Tempkv = WordAnalyse.input(str);
+                temp = WordAnalyse.analyse(str);
                 line++;
                 n = 1;
                 //直到读完才退出
-                if (count == kv.Count)
+                if (count == tokens.Count)
                     break;
             }
             //foreach (KeyValuePair<string, int> item in kv)
