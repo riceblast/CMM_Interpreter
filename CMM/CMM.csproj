@@ -61,7 +61,7 @@
     <Compile Include="table\code.cs" />
     <Compile Include="table\display.cs" />
     <Compile Include="table\nametab.cs" />
-    <Compile Include="WordAnalyse.cs" />
+    <Compile Include="WordAnalyser.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

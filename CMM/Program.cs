@@ -20,13 +20,13 @@ namespace CMM
                a*/
                m n o p";
             //总的表
-            List<(string name, int)> tokens = WordAnalyse.Analyse(test);
+            List<(string name, int)> tokens = WordAnalyser.Analyse(test);
             Console.WriteLine("单词" + "    " + "行数" + "    " + "位置");
             //每一行字符串
             System.IO.StringReader sr = new System.IO.StringReader(test);
             string str = sr.ReadLine();
             //每一行的表
-            List<(string name, int)> temp = WordAnalyse.Analyse(str);
+            List<(string name, int)> temp = WordAnalyser.Analyse(str);
 
             for (; ; )
             {
@@ -72,7 +72,7 @@ namespace CMM
                 str = sr.ReadLine();
                 if (str == null)
                     break;
-                temp = WordAnalyse.Analyse(str);
+                temp = WordAnalyser.Analyse(str);
                 line++;
                 n = 1;
                 //直到读完才退出

@@ -104,7 +104,6 @@ namespace CMM
                 SR_writein.Close();
                 FS_writein.Close();
                 IsSave = true;
-                //inputstr = input.Text;
             }
             else                                   // 如果该文本文件不存在，则新建文本文件
             {
@@ -118,7 +117,6 @@ namespace CMM
                     SR_writein.Close();
                     FS_writein.Close();
                     IsSave = true;
-                    //inputstr = input.Text;
                 }
                 else
                 {
@@ -141,7 +139,6 @@ namespace CMM
                 SR_writein.Close();
                 FS_writein.Close();
                 IsSave = true;
-                //inputstr = input.Text;
             }
             else
             {
@@ -177,8 +174,13 @@ namespace CMM
         {
             inputstr = input.Text;
 
+            tokens = WordAnalyser.Analyse(inputstr);
 
-            tokens = WordAnalyse.Analyse(inputstr);
+            if (tokens == null)
+            {
+                MessageBox.Show("没有文本");
+                return;
+            }
 
             foreach ((string value, int id) in tokens)
             {
