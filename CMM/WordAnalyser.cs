@@ -13,10 +13,10 @@ namespace CMM
         static List<(string, int)> tokens;
 
         static string[] keywords = { "if", "else", "while", "read", "write", "int", "real" };
-        static string[] symbols = { "+", "-", "*", "/", "=", "<", ">", "==", "<>", "(", ")", ";", "{", "}", "/*", "*/", "[", "]", ",", "." };
+        static string[] ops = { "+", "-", "*", "/", "=", "<", ">", "==", "<>", "(", ")", ";", "{", "}", "/*", "*/", "[", "]", ",", "." };
 
         static int sStart = keywords.Length;
-        static int oStart = symbols.Length;
+        static int oStart = ops.Length;
 
         static string buffer;
         static int index;
@@ -75,19 +75,19 @@ namespace CMM
                     }
                     buffer = "";
                     while ((Peek() != '*' || Peek() != '/') && ch != '\0') ;
+
                     return;
             }
 
-            value = Array.IndexOf(symbols, buffer) + sStart;
+            value = Array.IndexOf(ops, buffer) + sStart;
             if (value == -1)
-                throw new Exception();
+                throw new Exception("特殊符号错误");
             Read();
 
         }
 
         static void AnalyseNumber()
         {
-            int point = 0;
 
             for (Peek(); Char.IsDigit(ch) || ch == '.'; Peek())
             {
@@ -96,10 +96,10 @@ namespace CMM
                     Concat();
                     continue;
                 }
-                if (buffer.Contains('.'))
-                    throw new Exception();
-                if (!Char.IsDigit(Peek()))
-                    throw new Exception();
+                if (buffer.Contains('.')|| !Char.IsDigit(Peek()))
+                {
+                    throw new Exception("小数点错误");
+                }
                 if (ch != '\0')
                     Retract();
                 Concat();
@@ -107,7 +107,7 @@ namespace CMM
             if (ch != '\0')
                 Retract();
             value = oStart;
-            if (point == 1)
+            if (buffer.Contains('.'))
                 value = oStart + 1;
             Read();
         }
@@ -125,7 +125,7 @@ namespace CMM
             if (value == -1)
                 value = oStart + 1;
             if (buffer.Last() == '_')
-                throw new Exception();
+                throw new Exception("标识符错误");
             Read();
 
         }
@@ -145,26 +145,32 @@ namespace CMM
                 Concat();
                 try
                 {
-                    if (Array.IndexOf(symbols, buffer) != -1)
+                    if (Array.IndexOf(ops, buffer) != -1)
                         AnalyseSymbol();
                     else if (Char.IsDigit(ch))
                         AnalyseNumber();
                     else if (Char.IsLetter(ch) || ch == '_')
                         AnalyseIdAndKey();
-                    else if (Char.IsWhiteSpace(ch)) ;
+                    else if (Char.IsWhiteSpace(ch))
+                        buffer = "";
                     else
-                        throw new Exception();
-                    Peek();
+                        throw new Exception("非法符号错误");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    buffer = ex.Message;
+                    value = -1;
+                    Read();
+                }
+                finally
+                {
+                    Peek();
                 }
                 
             } while (ch != '\0');
 
             return tokens;
         }
-
+        
     }
 }
