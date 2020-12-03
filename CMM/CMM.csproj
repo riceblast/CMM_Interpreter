@@ -55,12 +55,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Program.cs" />
+    <Compile Include="RowAnalyser.cs" />
     <Compile Include="table\atab.cs" />
     <Compile Include="table\btab.cs" />
     <Compile Include="table\code.cs" />
     <Compile Include="table\display.cs" />
     <Compile Include="table\nametab.cs" />
+    <Compile Include="table\RowTabel.cs" />
     <Compile Include="WordAnalyser.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

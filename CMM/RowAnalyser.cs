@@ -1,32 +1,26 @@
-﻿using System;
+﻿using CMM.table;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 namespace CMM
 {
-    class Program
+    class RowAnalyser
     {
-        private void run()
+        public static List<RowTabel> run( string input)
         {
             int line = 1;       //第几行
             int n = 1;          //第几个
             int count = 0;    //总的表下标
-
-            string test = @"a b c d  e f g h  i j k l /*a*/  /*as
-               aa
-               a*/ m n o p /*as
-               aa
-               a*/
-               m n o p";
+            List<RowTabel> rowTabel = new List<RowTabel>();
             //总的表
-            List<(string name, int)> tokens = WordAnalyser.Analyse(test);
-            Console.WriteLine("单词" + "    " + "行数" + "    " + "位置");
+            List<(string name, int id)> tokens = WordAnalyser.Analyse(input);
             //每一行字符串
-            System.IO.StringReader sr = new System.IO.StringReader(test);
+            System.IO.StringReader sr = new System.IO.StringReader(input);
             string str = sr.ReadLine();
             //每一行的表
-            List<(string name, int)> temp = WordAnalyser.Analyse(str);
+            List<(string name, int id)> temp = WordAnalyser.Analyse(str);
 
             for (; ; )
             {
@@ -36,7 +30,13 @@ namespace CMM
                     //如果相等，直接打印
                     if (temp[i].name == tokens[count].name)
                     {
-                        Console.WriteLine(tokens[count].name + "    " + line + "    " + n);
+                        rowTabel.Add(new RowTabel()
+                        {
+                            Name = tokens[count].name,
+                            Id = tokens[count].id,
+                            Row = line,
+                            Num = n
+                        });
                         n++;
                         count++;
                     }
@@ -79,23 +79,7 @@ namespace CMM
                 if (count == tokens.Count)
                     break;
             }
-            //foreach (KeyValuePair<string, int> item in kv)
-            //{
-
-            //    if (str.Contains(item.Key)))
-            //    {
-            //        Console.WriteLine(item.Key + "    " + line + "    " + n);
-            //        n++;
-            //    }
-
-            //    else
-            //    {
-            //        Console.WriteLine(item.Key + "    " + line + "    " + n);
-            //        line += huanHangCiShu(item.Key);
-            //        n = 1;
-            //    }
-            //}
-
+            return rowTabel;
         }
         //返回字符串中的换行次数
         private static int huanHangCiShu(string s)

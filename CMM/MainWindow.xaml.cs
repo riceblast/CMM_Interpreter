@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using CMM.table;
+using Microsoft.Win32;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -175,7 +176,6 @@ namespace CMM
             inputstr = input.Text;
 
             tokens = WordAnalyser.Analyse(inputstr);
-
             if (tokens == null)
             {
                 MessageBox.Show("没有文本");
@@ -185,6 +185,10 @@ namespace CMM
             foreach ((string value, int id) in tokens)
             {
                 output.Text += $"<{value},{id}>\n";
+            }
+            foreach (RowTabel item  in RowAnalyser.run(inputstr))
+            {
+                output.Text += $"<{item.Name},{item.Id},{item.Row},{item.Num}>\n";
             }
         }
     }
