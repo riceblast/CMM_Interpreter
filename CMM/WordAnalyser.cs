@@ -10,11 +10,12 @@ namespace CMM
 {
     class WordAnalyser
     {
+        //单词
         static List<(string, int)> tokens;
-
+        //关键字和特殊符号
         static string[] keywords = { "if", "else", "while", "read", "write", "int", "real" };
         static string[] symbols = { "+", "-", "*", "/", "=", "<", ">", "==", "<>", "(", ")", ";", "{", "}", "/*", "*/", "[", "]", ",", "." };
-
+        //用于单词编码
         static int sStart = keywords.Length;
         static int oStart = symbols.Length;
 
@@ -24,6 +25,7 @@ namespace CMM
         static string input;
         static int value;
 
+        //读取下一个字符
         static char Peek()
         {
             ++index;
@@ -31,29 +33,30 @@ namespace CMM
             {
                 ch = input[index];
             }
+            //读完输入串以\0为标志
             catch (IndexOutOfRangeException)
             {
                 ch = '\0';
             }
             return ch;
         }
-
+        //加入缓冲
         static void Concat()
         {
             buffer += ch;
         }
-
+        //回退
         static void Retract()
         {
             ch = input[--index];
         }
-
+        //读取单词
         static void Read()
         {
             tokens.Add((buffer, value));
             buffer = "";
         }
-
+        //分析特殊符号
         static void AnalyseSymbol()
         {
 
@@ -73,6 +76,7 @@ namespace CMM
                         Retract();
                         break;
                     }
+                    //跳过注释
                     buffer = "";
                     while ((Peek() != '*' || Peek() != '/') && ch != '\0') ;
                     return;
@@ -84,7 +88,7 @@ namespace CMM
             Read();
 
         }
-
+        //分析数字
         static void AnalyseNumber()
         {
             for (Peek(); Char.IsDigit(ch) || ch == '.'; Peek())
@@ -94,6 +98,7 @@ namespace CMM
                     Concat();
                     continue;
                 }
+                //小数点只有一个，且小数点后是数字
                 if (buffer.Contains('.') || !Char.IsDigit(Peek()))
                     throw new Exception("小数点错误");
                 if (ch != '\0')
@@ -107,7 +112,7 @@ namespace CMM
                 value = oStart + 1;
             Read();
         }
-
+        //分析标识符和保留字
         static void AnalyseIdAndKey()
         {
 
@@ -125,7 +130,7 @@ namespace CMM
             Read();
 
         }
-
+        //词法分析
         public static List<(string, int)> Analyse(string inputStr)
         {
             if (inputStr == "")
