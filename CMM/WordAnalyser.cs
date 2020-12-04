@@ -8,34 +8,72 @@ using System.Threading.Tasks;
 
 namespace CMM
 {
+
+    class NameTable
+    {
+        public static List<nametab> tabs = new List<nametab>();
+    }
+
+    enum TokenType
+    {
+        IF,
+        ELSE,
+        WHILE,
+        READ,
+        WRITE,
+        INT,
+        REAL,
+        PLUS,
+        MINUS,
+        MUL,
+        DIV,
+        ASSIGN,
+        LESS,
+        GREATER,
+        EQUAL,
+        NOTEQUAL,
+        LPARENT,
+        RPARENT,
+        SEMI,
+        LBRACE,
+        RBRACE,
+        NOTES,
+        LBRACKET,
+        RBRACKET,
+        COMMA,
+        INTVAL,
+        REALVAL,
+        ID,
+        ERR
+    }
+
     class WordAnalyser
     {
+        
         //单词
-        static List<(string, int)> tokens;
+        static List<(string, TokenType)> tokens;
         //关键字和特殊符号
         static string[] keywords = { "if", "else", "while", "read", "write", "int", "real" };
         static string[] symbols = { "+", "-", "*", "/", "=", "<", ">", "==", "<>", "(", ")", ";", "{", "}", "/*", "*/", "[", "]", ",", "." };
-        //用于单词编码
-        static int sStart = keywords.Length;
-        static int oStart = symbols.Length;
 
         static string buffer;
         static int index;
         static char ch;
         static string input;
-        static int value;
+        static TokenType value;
+        static bool flag;
 
         //读取下一个字符
         static char Peek()
         {
             ++index;
-            try
+            if (index < input.Length)
             {
                 ch = input[index];
             }
-            //读完输入串以\0为标志
-            catch (IndexOutOfRangeException)
+            else
             {
+                flag = false;
                 ch = '\0';
             }
             return ch;
@@ -54,6 +92,8 @@ namespace CMM
         static void Read()
         {
             tokens.Add((buffer, value));
+            nametab tab = new nametab(buffer);
+            NameTable.tabs.Add(tab);
             buffer = "";
         }
         //分析特殊符号
@@ -64,84 +104,163 @@ namespace CMM
             {
                 case '=':
                     if (Peek() == '=')
+                    {
+                        value = TokenType.EQUAL;
                         Concat();
+                    }
+                    else
+                    {
+                        Retract();
+                        value = TokenType.ASSIGN;
+                    }
                     break;
                 case '<':
                     if (Peek() == '>')
+                    {
+                        value = TokenType.NOTEQUAL;
                         Concat();
-                    break;
-                case '/':
-                    if (Peek() != '*' && ch != '\0')
+                    }
+                    else
                     {
                         Retract();
-                        break;
+                        value = TokenType.LESS;
                     }
-                    //跳过注释
-                    buffer = "";
-                    while ((Peek() != '*' || Peek() != '/') && ch != '\0') ;
-                    return;
+                    break;
+                case '/':
+                    if (Peek() == '*')
+                    {
+                        buffer = "";
+                        //跳过注释
+                        while (Peek() != '*' || Peek() != '/')
+                        {
+                            if (ch == '\0')
+                                throw new Exception("注释错误");
+                        }
+                        value = TokenType.NOTES;
+                    }
+                    else
+                    {
+                        Retract();
+                        value = TokenType.DIV;
+                    }
+                    break;
+                case '+':
+                    value = TokenType.PLUS;
+                    break;
+                case '-':
+                    value = TokenType.MINUS;
+                    break;
+                case '*':
+                    value = TokenType.MUL;
+                    break;
+                case '(':
+                    value = TokenType.LPARENT;
+                    break;
+                case ')':
+                    value = TokenType.RPARENT;
+                    break;
+                case ';':
+                    value = TokenType.SEMI;
+                    break;
+                case '{':
+                    value = TokenType.LBRACE;
+                    break;
+                case '}':
+                    value = TokenType.RBRACE;
+                    break;
+                case '[':
+                    value = TokenType.LBRACKET;
+                    break;
+                case ']':
+                    value = TokenType.RBRACKET;
+                    break;
+                case ',':
+                    value = TokenType.COMMA;
+                    break;
+                default:
+                    throw new Exception("特殊符号错误");
             }
-
-            value = Array.IndexOf(symbols, buffer) + sStart;
-            if (value == -1)
-                throw new Exception("特殊符号错误");
             Read();
 
         }
         //分析数字
         static void AnalyseNumber()
         {
-            for (Peek(); Char.IsDigit(ch) || ch == '.'; Peek())
+            while (Char.IsDigit(Peek()))
             {
-                if (Char.IsDigit(ch))
-                {
-                    Concat();
-                    continue;
-                }
-                //小数点只有一个，且小数点后是数字
-                if (buffer.Contains('.') || !Char.IsDigit(Peek()))
-                    throw new Exception("小数点错误");
-                if (ch != '\0')
-                    Retract();
                 Concat();
             }
-            if (ch != '\0')
-                Retract();
-            value = oStart;
-            if (buffer.Contains('.'))
-                value = oStart + 1;
+            value = TokenType.INTVAL;
+            if (ch == '.')
+            {
+                Concat();
+                while (Char.IsDigit(Peek()))
+                {
+                    Concat();
+                }
+                value = TokenType.REALVAL;
+            }
+            if (Char.IsLetter(ch) || ch == '.')
+                throw new Exception("数字错误");
+            Retract();
+            if (ch == '.')
+                throw new Exception("数字错误");
             Read();
         }
         //分析标识符和保留字
         static void AnalyseIdAndKey()
         {
 
-            for (Peek(); Char.IsLetterOrDigit(ch) || ch == '_'; Peek())
+            while (Char.IsLetterOrDigit(Peek()) || ch == '_')
             {
                 Concat();
             }
-            if (ch != '\0')
-                Retract();
-            value = Array.IndexOf(keywords, buffer);
-            if (value == -1)
-                value = oStart + 2;
-            if (buffer.Last() == '_')
+            switch(Array.IndexOf(keywords, buffer))
+            {
+                case 0:
+                    value = TokenType.IF;
+                    break;
+                case 1:
+                    value = TokenType.ELSE;
+                    break;
+                case 2:
+                    value = TokenType.WHILE;
+                    break;
+                case 3:
+                    value = TokenType.READ;
+                    break;
+                case 4:
+                    value = TokenType.WRITE;
+                    break;
+                case 5:
+                    value = TokenType.INT;
+                    break;
+                case 6:
+                    value = TokenType.REAL;
+                    break;
+                default:
+                    value = TokenType.ID;
+                    break;
+            }
+            Retract();
+            if (ch == '_')
                 throw new Exception("标识符错误");
             Read();
 
         }
         //词法分析
-        public static List<(string, int)> Analyse(string inputStr)
+        public static List<(string, TokenType)> Analyse(string inputStr)
         {
             if (inputStr == "")
                 return null;
             input = inputStr;
-            tokens = new List<(string, int)>();
+            tokens = new List<(string, TokenType)>();
             index = 0;
             buffer = "";
             ch = input[index];
+            flag = true;
 
-            do
+            while (flag)
             {
                 Concat();
                 try
@@ -160,18 +279,18 @@ namespace CMM
                 catch (Exception ex)
                 {
                     buffer = ex.Message;
-                    value = -1;
+                    value = TokenType.ERR;
                     Read();
                 }
                 finally
                 {
                     Peek();
                 }
-
-            } while (ch != '\0');
+            } 
 
             return tokens;
         }
 
     }
+
 }

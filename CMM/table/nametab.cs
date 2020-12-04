@@ -19,7 +19,7 @@ namespace CMM
         private int lev;
 
         //名字的类型 例整型、字符型、布尔型、数组类型
-        private string typ;
+        private string type;
 
         //用于标明名字是否为变量形参名
         private bool normal;
@@ -37,5 +37,11 @@ namespace CMM
 
         //指向同一程序体中上一个名字在nametab中的位置，第一个的link为0
         private string link;
+
+        public nametab(string name)
+        {
+            this.name = name;
+        }
+
     }
 }
