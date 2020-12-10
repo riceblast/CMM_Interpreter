@@ -63,7 +63,7 @@ namespace CMM
 
         private void MenuItem_File_News(object sender, RoutedEventArgs e)
         {
-            input.Text = "";
+            TextEditor.Text = "";
             IsSave = false;
             inputstr = "";
         }
@@ -82,7 +82,7 @@ namespace CMM
                 string str = reader.ReadToEnd();                    // 如果没有System.Text.Encoding.Default  会出现编码问题
                 reader.Close();
                 file.Close();
-                input.Text = str;
+                TextEditor.Text = str;
                 //inputstr = str;
             }
             else
@@ -101,7 +101,7 @@ namespace CMM
             {
                 FileStream FS_writein = new FileStream(FilePath, FileMode.Create, FileAccess.Write);
                 StreamWriter SR_writein = new StreamWriter(FS_writein, System.Text.Encoding.Default);
-                SR_writein.Write(input.Text);
+                SR_writein.Write(TextEditor.Text);
                 SR_writein.Close();
                 FS_writein.Close();
                 IsSave = true;
@@ -114,7 +114,7 @@ namespace CMM
                     FilePath = sfg.FileName;
                     FileStream FS_writein = new FileStream(FilePath, FileMode.CreateNew, FileAccess.Write);
                     StreamWriter SR_writein = new StreamWriter(FS_writein, System.Text.Encoding.Default);
-                    SR_writein.Write(input.Text);
+                    SR_writein.Write(TextEditor.Text);
                     SR_writein.Close();
                     FS_writein.Close();
                     IsSave = true;
@@ -136,7 +136,7 @@ namespace CMM
                 FilePath = sfg.FileName;
                 FileStream FS_writein = new FileStream(FilePath, FileMode.CreateNew, FileAccess.Write);
                 StreamWriter SR_writein = new StreamWriter(FS_writein, System.Text.Encoding.Default);
-                SR_writein.Write(input.Text);
+                SR_writein.Write(TextEditor.Text);
                 SR_writein.Close();
                 FS_writein.Close();
                 IsSave = true;
@@ -150,7 +150,7 @@ namespace CMM
         private void MenuItem_File_Exsit(object sender, RoutedEventArgs e)
         {
             object obj = this;
-            if (IsSave == false && input.Text != null && input.Text.Length > 0)
+            if (IsSave == false && TextEditor.Text != null && TextEditor.Text.Length > 0)
             {
                 MessageBoxResult msg = MessageBox.Show("您的文档还没保存，是否退出", "提示", MessageBoxButton.YesNoCancel);
                 if (msg == MessageBoxResult.Yes)
@@ -173,7 +173,8 @@ namespace CMM
         }
         private void Run(object sender, RoutedEventArgs e)
         {
-            inputstr = input.Text;
+            inputstr = TextEditor.Text;
+            
 
             tokens = WordAnalyser.Analyse(inputstr);
             if (tokens == null)
@@ -191,5 +192,6 @@ namespace CMM
                 output.Text += $"<{item.Name},{item.Id},{item.Row},{item.Num}>\n";
             }
         }
+
     }
 }
