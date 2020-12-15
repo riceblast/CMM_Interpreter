@@ -42,6 +42,11 @@ namespace CMM
         public NEnum NSymbol { get; set; }
 
         /// <summary>
+        /// 该结点中枚举值转换为string对应的值
+        /// </summary>
+        public string StringValue { get; set; }
+
+        /// <summary>
         /// 该结点的所有孩子结点
         /// </summary>
         public List<ParseTreeNode> Childs { get; set; }
