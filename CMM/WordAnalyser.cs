@@ -14,7 +14,7 @@ namespace CMM
         public static List<nametab> tabs = new List<nametab>();
     }
 
-    enum TokenType
+    public enum TokenType
     {
         IF,
         ELSE,

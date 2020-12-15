@@ -55,6 +55,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="NEnum.cs" />
+    <Compile Include="ParseTree.cs" />
     <Compile Include="RowAnalyser.cs" />
     <Compile Include="table\atab.cs" />
     <Compile Include="table\btab.cs" />
