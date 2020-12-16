@@ -9,45 +9,12 @@ using System.Threading.Tasks;
 namespace CMM
 {
 
-    class NameTable
+    public class NameTable
     {
         public static List<nametab> tabs = new List<nametab>();
     }
 
-    public enum TokenType
-    {
-        IF,
-        ELSE,
-        WHILE,
-        READ,
-        WRITE,
-        INT,
-        REAL,
-        PLUS,
-        MINUS,
-        MUL,
-        DIV,
-        ASSIGN,
-        LESS,
-        GREATER,
-        EQUAL,
-        NOTEQUAL,
-        LPARENT,
-        RPARENT,
-        SEMI,
-        LBRACE,
-        RBRACE,
-        NOTES,
-        LBRACKET,
-        RBRACKET,
-        COMMA,
-        INTVAL,
-        REALVAL,
-        ID,
-        ERR
-    }
-
-    class WordAnalyser
+    public class WordAnalyser
     {
         
         //单词
@@ -286,7 +253,12 @@ namespace CMM
                 {
                     Peek();
                 }
-            } 
+            }
+
+            // 添加结束符
+            buffer = "$";
+            value = TokenType.END;
+            Read();
 
             return tokens;
         }

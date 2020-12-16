@@ -55,15 +55,20 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ErrorInfo.cs" />
     <Compile Include="NEnum.cs" />
     <Compile Include="ParseTree.cs" />
+    <Compile Include="ParsingTable.cs" />
+    <Compile Include="Production.cs" />
     <Compile Include="RowAnalyser.cs" />
+    <Compile Include="SyntacticAnalyser.cs" />
     <Compile Include="table\atab.cs" />
     <Compile Include="table\btab.cs" />
     <Compile Include="table\code.cs" />
     <Compile Include="table\display.cs" />
     <Compile Include="table\nametab.cs" />
     <Compile Include="table\RowTabel.cs" />
+    <Compile Include="TokenType.cs" />
     <Compile Include="WordAnalyser.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
