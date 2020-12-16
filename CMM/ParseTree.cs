@@ -14,9 +14,17 @@ namespace CMM
         /// <summary>
         /// 语法树根结点
         /// </summary>
-        ParseTreeNode Root { get; set; }
+        public ParseTreeNode Root { get; set; }
 
-        // 语法树其他信息
+        /// <summary>
+        /// 是否语法分析成功
+        /// </summary>
+        public bool IsSuccess { get; set; }
+
+        /// <summary>
+        /// 报错信息
+        /// </summary>
+        public List<ErrorInfo> errorInfos { get; set; }
 
         /// <summary>
         /// 语法分析树构造函数，初始化根节点
