@@ -15,12 +15,12 @@ namespace CMM
             int count = 0;    //总的表下标
             List<RowTabel> rowTabel = new List<RowTabel>();
             //总的表
-            List<(string name, TokenType id)> tokens = WordAnalyser.Analyse(input);
+            List<(string name, TerminalType id)> tokens = WordAnalyser.Analyse(input);
             //每一行字符串
             System.IO.StringReader sr = new System.IO.StringReader(input);
             string str = sr.ReadLine();
             //每一行的表
-            List<(string name, TokenType id)> temp = WordAnalyser.Analyse(str);
+            List<(string name, TerminalType id)> temp = WordAnalyser.Analyse(str);
 
             for (; ; )
             {

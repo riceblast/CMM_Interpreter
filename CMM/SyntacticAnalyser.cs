@@ -19,7 +19,7 @@ namespace CMM
         public SyntacticAnalyser()
         {
             this.symbolStack = new Stack<ParseTreeNode>();
-            this.inputStack = new Stack<(string, TokenType)>();
+            this.inputStack = new Stack<(string, TerminalType)>();
 
             // 初始化预测分析表
             this.parsingTable = new ParsingTable();
@@ -33,7 +33,7 @@ namespace CMM
         /// <summary>
         /// 由词法分析得到的token列表
         /// </summary>
-        private Stack<(string, TokenType)> inputStack;
+        private Stack<(string, TerminalType)> inputStack;
 
         /// <summary>
         /// 由该语法分析器构造的语法分析树
@@ -50,8 +50,10 @@ namespace CMM
         /// </summary>
         /// <param name="tokens">由词法分析得到的token列表</param>
         /// <returns>语法分析树</returns>
-        public ParseTree SyntacticAnalysis(List<(string, TokenType)> tokens)
+        public ParseTree SyntacticAnalysis(List<(string, TerminalType)> tokens)
         {
+            bool isSuccess = true; // 表示语法分析是否成功
+
             // 将所有token读入栈
             for (int i = tokens.Count - 1; i >= 0; i--)
             {
@@ -59,7 +61,7 @@ namespace CMM
             }
 
             // 将结束符号放入符号栈中
-            ParseTreeNode EndNode = new ParseTreeNode(true, TokenType.END, NEnum.DEFAULT);
+            ParseTreeNode EndNode = new ParseTreeNode(true, TerminalType.END, NEnum.DEFAULT);
             symbolStack.Push(EndNode);
 
             // 开始构造语法分析树
@@ -67,8 +69,9 @@ namespace CMM
 
             // 每次从输入栈中读取一个符号并更新符号栈的值
             // 当没有读到$时进行循环，如果下一个是结束符号$则结束循环
-            (string, TokenType) token; // 输入串中的当前讨论的token
+            (string, TerminalType) token; // 输入串中的当前讨论的token
             ParseTreeNode symbolNode; // 符号表中当前讨论的结点
+
             while(inputStack.Count > 0)
             {
                 token = inputStack.Peek();
@@ -95,13 +98,14 @@ namespace CMM
 
                 #region 查看M[U, a]表
                 // 由于只有exp和标识符的情况会出现递归，所以其他非终结符号直接读取产生式即可
+                List<ErrorInfo> NonErrorInfos;   // 在查找M[U,a]表时出现的错误
                 if (symbolNode.IsLeaf)
                 {
                     // 如果符号栈栈顶是终结符号
                     // 如果是结束符号
-                    if(symbolNode.TSymbol == TokenType.END)
+                    if(symbolNode.TSymbol == TerminalType.END)
                     {
-                        if(token.Item2 == TokenType.END)
+                        if(token.Item2 == TerminalType.END)
                         {
                             // 语法分析结束，语法分析成功
                             break;
@@ -109,6 +113,8 @@ namespace CMM
                         else
                         {
                             // TODO 语法分析出错处理
+
+                            isSuccess = false;
                         }
                     }
 
@@ -122,51 +128,25 @@ namespace CMM
                     else
                     {
                         // TODO　语法分析出错处理
+
+                        isSuccess = false;
                     }
                 }
                 else
                 {
-                    // 对于非终结符号，则参照预测分析表找到产生式
-                    // 在没有遇到exp或者variable的情况下，只会有一条产生式满足规则
-                    // 产生式列表
-                    List<ParsingTableItem> productions =
-                        this.parsingTable.GetItem(symbolNode.NSymbol, token.Item2); 
-                    if (productions == null || productions.Count == 0)
+                    // 如果查找表失败则进行错误处理
+                    if(!LookUpTable(symbolNode, out NonErrorInfos))
                     {
-                        // TODO 语法分析错误处理
-                    }
-                    else
-                    {
-                        List<ParseTreeNode> production = productions[0].production;
-                        // 生成对应的树结点，并设置子树
-                        ParseTreeNode treeNode; // 用于接受新建的树结点
-                        for(int i = 0; i < production.Count; i++)
-                        {
-                            // 对于“空”终结符号，则不产生任何树结点
-                            if(production[i].TSymbol != TokenType.EMPTY)
-                            {
-                                treeNode = new ParseTreeNode(production[i].IsLeaf,
-                                    production[i].TSymbol, production[i].NSymbol);
+                        // TODO 出错处理
 
-                                symbolNode.Childs.Add(treeNode);
-                            }
-                        }
-
-                        // 将产生式对应的(非)终结符号入栈, 入栈顺序与childs顺序相反
-                        for (int i = symbolNode.Childs.Count - 1; i >= 0; i--)
-                        {
-                            // 对于“空”终结符号，则不push任何符号
-                            if (symbolNode.Childs[i].TSymbol != TokenType.EMPTY)
-                            {
-                                symbolStack.Push(symbolNode.Childs[i]);
-                            }
-                        }
+                        isSuccess = false;
                     }
                 }
                 #endregion
             }
 
             // 返回构建好的语法分析树
+            this.targetTree.IsSuccess = isSuccess;
             return this.targetTree;
         }
 
@@ -178,60 +158,41 @@ namespace CMM
         private bool VariableAnalyse(out List<ErrorInfo> errorInfos)
         {
             errorInfos = new List<ErrorInfo>();
+            bool isSuccess = true; // 是否语法分析成功
 
-            (string, TokenType) token = inputStack.Peek(); // 输入串中的当前讨论的token
+            (string, TerminalType) token = inputStack.Peek(); // 输入串中的当前讨论的token
             ParseTreeNode symbolNode = symbolStack.Peek(); // 符号表中当前讨论的树结点
             ParseTreeNode treeNode; // 用于接收新建的树结点
 
-            // 先判断variable对应的第一个输入符号是不是ID
-            if(token.Item2 == TokenType.ID)
+            // 首先判断是不是ID
+            if(!ProcessNextTerminal(symbolNode, TerminalType.ID))
             {
-                treeNode = new ParseTreeNode(true, TokenType.ID, NEnum.DEFAULT);
-                symbolNode.Childs.Add(treeNode);
-                inputStack.Pop();
-            }
-            else
-            {
-                // TODO 错误处理
+                // TODO 出错处理
 
-
-                return false;
+                isSuccess = false;
             }
 
-            // 判断是否是数组[]
-            token = inputStack.Peek();
-            if(token.Item2 == TokenType.LBRACKET)
+            // 再判断之后有没有[
+            if(isSuccess && ProcessNextTerminal(symbolNode, TerminalType.LBRACKET))
             {
-                // 将[ 加入语法分析树中
-                treeNode = new ParseTreeNode(true, TokenType.LBRACKET, NEnum.DEFAULT);
-                symbolNode.Childs.Add(treeNode);
-                inputStack.Pop();
-
-
-                // 判断digit
-                token = inputStack.Peek();
-                //treeNode = new ParseTreeNode(true, TokenType.INTVAL, )
-
-                // 判断]
-                token = inputStack.Peek();
-                if (token.Item2 == TokenType.RBRACKET)
+                // 再继续判断接下来是不是intVal和]
+                if (isSuccess && !ProcessNextTerminal(symbolNode, TerminalType.INTVAL))
                 {
-                    // 将] 加入到语法分析树中
-                    treeNode = new ParseTreeNode(true, TokenType.RBRACKET, NEnum.DEFAULT);
-                    symbolNode.Childs.Add(treeNode);
-                }
-                else
-                {
-                    // 只有左括号没有右括号
                     // TODO 出错处理
 
-                    return false;
+                    isSuccess = false;
+                }
+
+                if(isSuccess && !ProcessNextTerminal(symbolNode, TerminalType.RBRACKET))
+                {
+                    // TODO 出错处理
+
+                    isSuccess = false;
                 }
             }
 
-            // 首先判断是不是ID
-
-            return true;
+            // 如果没有[则直接返回true，或者
+            return isSuccess;
         }
 
         /// <summary>
@@ -242,9 +203,9 @@ namespace CMM
         /// <param name="fatherNode">当前正在研究的符号表的栈顶元素</param>
         /// <param name="tEnum">待判断的终结符号</param>
         /// <returns>是否语法分析成功</returns>
-        private bool JudgeNextTerminal(ParseTreeNode fatherNode, TokenType targetTerminal)
+        private bool ProcessNextTerminal(ParseTreeNode fatherNode, TerminalType targetTerminal)
         {
-            (string, TokenType) token = inputStack.Peek(); // 输入串中的当前讨论的token
+            (string, TerminalType) token = inputStack.Peek(); // 输入串中的当前讨论的token
             ParseTreeNode treeNode; // 用于接收新建的语法树结点
 
             // 如果下一个token不满足要求
@@ -264,14 +225,16 @@ namespace CMM
 
         /// <summary>
         /// 利用当前栈顶元素查找预测分析表并修改符号表
+        /// 该函数无法处理标识符类型和表达式类型
         /// </summary>
         /// <param name="symbolNode">当前正在研究的符号表的栈顶元素</param>
         /// <returns>是否语法分析成功</returns>
         private bool LookUpTable(ParseTreeNode symbolNode, out List<ErrorInfo> errorInfos)
         {
             errorInfos = new List<ErrorInfo>();
+            bool isSuccess = true; // 是否语法分析成功
 
-            (string, TokenType) token = inputStack.Peek(); // 输入串中的当前讨论的token
+            (string, TerminalType) token = inputStack.Peek(); // 输入串中的当前讨论的token
             ParseTreeNode treeNode; // 用于接收新建的语法树结点
 
             // 对于非终结符号，则参照预测分析表找到产生式
@@ -283,7 +246,7 @@ namespace CMM
             {
                 // TODO 语法分析错误处理
 
-                return false;
+                isSuccess = false;
             }
             else
             {
@@ -292,7 +255,7 @@ namespace CMM
                 for (int i = 0; i < production.Count; i++)
                 {
                     // 对于“空”终结符号，则不产生任何树结点
-                    if (production[i].TSymbol != TokenType.EMPTY)
+                    if (production[i].TSymbol != TerminalType.EMPTY)
                     {
                         treeNode = new ParseTreeNode(production[i].IsLeaf,
                             production[i].TSymbol, production[i].NSymbol);
@@ -305,29 +268,87 @@ namespace CMM
                 for (int i = symbolNode.Childs.Count - 1; i >= 0; i--)
                 {
                     // 对于“空”终结符号，则不push任何符号
-                    if (symbolNode.Childs[i].TSymbol != TokenType.EMPTY)
+                    if (symbolNode.Childs[i].TSymbol != TerminalType.EMPTY)
                     {
                         symbolStack.Push(symbolNode.Childs[i]);
                     }
                 }
-
-                return true;
             }
+
+            return isSuccess;
         }
 
         /// <summary>
         /// 单独对表达式进行语法分析
         /// </summary>
+        /// <param name="fatherNode">当前符号栈正在研究的栈顶结点，该结点的NEnum为exp</param>
         /// <param name="errorInfos">待传出的错误信息</param>
         /// <returns>是否语法分析成功，如果返回值为false，则errorInof不为空</returns>
-        private bool ExpAnalyse(out List<ErrorInfo> errorInfos)
+        private bool ExpAnalyse(ParseTreeNode fatherNode, out List<ErrorInfo> errorInfos)
         {
             errorInfos = new List<ErrorInfo>();
+            bool isSuccess = true; // 是否语法分析成功
+            ParseTreeNode treeNode; // 用于接收新建的语法树结点
 
-            #region add
+            #region addtive-exp
+            treeNode = new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.addtive_exp); // 新建addtive_exp的子结点
+            fatherNode.Childs.Add(treeNode);
+
+            List<ErrorInfo> errorInfosAddtive_1;
+            if(!AddtiveExpAnalyse(treeNode, out errorInfosAddtive_1))
+            {
+                // 出错处理
+
+                isSuccess = false;
+            }
+            #endregion
+
+            #region logical-op
+            (string, TerminalType) token = inputStack.Peek();
+            if (token.Item2 == TerminalType.GREATER)
+                ;
+            #endregion
+
+            #region addtive-exp
 
             #endregion
 
+            return true;
+        }
+
+        /// <summary>
+        /// 单独对addtive-exp作语法分析
+        /// </summary>
+        /// <param name="fatherNode">当前符号栈正在研究的栈顶结点，该结点的NEnum为addtive-exp</param>
+        /// <param name="errorInfos">待传出的错误列表</param>
+        /// <returns>是否语法分析成功</returns>
+        private bool AddtiveExpAnalyse(ParseTreeNode fatherNode, out List<ErrorInfo> errorInfos)
+        {
+            errorInfos = new List<ErrorInfo>();
+            return true;
+        }
+
+        /// <summary>
+        /// 单独对term作语法分析
+        /// </summary>
+        /// <param name="fatherNode">当前符号栈正在研究的栈顶结点，该结点的NEnum为term</param>
+        /// <param name="errorInfos">错误列表</param>
+        /// <returns>是否语法分析成功</returns>
+        private bool TermAnalyse(ParseTreeNode fatherNode, out List<ErrorInfo> errorInfos)
+        {
+            errorInfos = new List<ErrorInfo>();
+            return true;
+        }
+
+        /// <summary>
+        /// 单独对Factor作语法分析
+        /// </summary>
+        /// <param name="fatherNode">当前符号栈正在研究的栈顶结点，该结点的NEnum为facor</param>
+        /// <param name="errorInfos">待传出的错误信息</param>
+        /// <returns>是否语法分析成功</returns>
+        private bool FactorAnalyse(ParseTreeNode fatherNode, out List<ErrorInfo> errorInfos)
+        {
+            errorInfos = new List<ErrorInfo>();
             return true;
         }
     }

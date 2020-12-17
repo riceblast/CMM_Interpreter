@@ -18,7 +18,7 @@ namespace CMM
     {
         
         //单词
-        static List<(string, TokenType)> tokens;
+        static List<(string, TerminalType)> tokens;
         //关键字和特殊符号
         static string[] keywords = { "if", "else", "while", "read", "write", "int", "real" };
         static string[] symbols = { "+", "-", "*", "/", "=", "<", ">", "==", "<>", "(", ")", ";", "{", "}", "/*", "*/", "[", "]", ",", "." };
@@ -27,7 +27,7 @@ namespace CMM
         static int index;
         static char ch;
         static string input;
-        static TokenType value;
+        static TerminalType value;
         static bool flag;
 
         //读取下一个字符
@@ -72,25 +72,25 @@ namespace CMM
                 case '=':
                     if (Peek() == '=')
                     {
-                        value = TokenType.EQUAL;
+                        value = TerminalType.EQUAL;
                         Concat();
                     }
                     else
                     {
                         Retract();
-                        value = TokenType.ASSIGN;
+                        value = TerminalType.ASSIGN;
                     }
                     break;
                 case '<':
                     if (Peek() == '>')
                     {
-                        value = TokenType.NOTEQUAL;
+                        value = TerminalType.NOTEQUAL;
                         Concat();
                     }
                     else
                     {
                         Retract();
-                        value = TokenType.LESS;
+                        value = TerminalType.LESS;
                     }
                     break;
                 case '/':
@@ -103,46 +103,46 @@ namespace CMM
                             if (ch == '\0')
                                 throw new Exception("注释错误");
                         }
-                        value = TokenType.NOTES;
+                        value = TerminalType.NOTES;
                     }
                     else
                     {
                         Retract();
-                        value = TokenType.DIV;
+                        value = TerminalType.DIV;
                     }
                     break;
                 case '+':
-                    value = TokenType.PLUS;
+                    value = TerminalType.PLUS;
                     break;
                 case '-':
-                    value = TokenType.MINUS;
+                    value = TerminalType.MINUS;
                     break;
                 case '*':
-                    value = TokenType.MUL;
+                    value = TerminalType.MUL;
                     break;
                 case '(':
-                    value = TokenType.LPARENT;
+                    value = TerminalType.LPARENT;
                     break;
                 case ')':
-                    value = TokenType.RPARENT;
+                    value = TerminalType.RPARENT;
                     break;
                 case ';':
-                    value = TokenType.SEMI;
+                    value = TerminalType.SEMI;
                     break;
                 case '{':
-                    value = TokenType.LBRACE;
+                    value = TerminalType.LBRACE;
                     break;
                 case '}':
-                    value = TokenType.RBRACE;
+                    value = TerminalType.RBRACE;
                     break;
                 case '[':
-                    value = TokenType.LBRACKET;
+                    value = TerminalType.LBRACKET;
                     break;
                 case ']':
-                    value = TokenType.RBRACKET;
+                    value = TerminalType.RBRACKET;
                     break;
                 case ',':
-                    value = TokenType.COMMA;
+                    value = TerminalType.COMMA;
                     break;
                 default:
                     throw new Exception("特殊符号错误");
@@ -157,7 +157,7 @@ namespace CMM
             {
                 Concat();
             }
-            value = TokenType.INTVAL;
+            value = TerminalType.INTVAL;
             if (ch == '.')
             {
                 Concat();
@@ -165,7 +165,7 @@ namespace CMM
                 {
                     Concat();
                 }
-                value = TokenType.REALVAL;
+                value = TerminalType.REALVAL;
             }
             if (Char.IsLetter(ch) || ch == '.')
                 throw new Exception("数字错误");
@@ -185,28 +185,28 @@ namespace CMM
             switch(Array.IndexOf(keywords, buffer))
             {
                 case 0:
-                    value = TokenType.IF;
+                    value = TerminalType.IF;
                     break;
                 case 1:
-                    value = TokenType.ELSE;
+                    value = TerminalType.ELSE;
                     break;
                 case 2:
-                    value = TokenType.WHILE;
+                    value = TerminalType.WHILE;
                     break;
                 case 3:
-                    value = TokenType.READ;
+                    value = TerminalType.READ;
                     break;
                 case 4:
-                    value = TokenType.WRITE;
+                    value = TerminalType.WRITE;
                     break;
                 case 5:
-                    value = TokenType.INT;
+                    value = TerminalType.INT;
                     break;
                 case 6:
-                    value = TokenType.REAL;
+                    value = TerminalType.REAL;
                     break;
                 default:
-                    value = TokenType.ID;
+                    value = TerminalType.ID;
                     break;
             }
             Retract();
@@ -216,12 +216,12 @@ namespace CMM
 
         }
         //词法分析
-        public static List<(string, TokenType)> Analyse(string inputStr)
+        public static List<(string, TerminalType)> Analyse(string inputStr)
         {
             if (inputStr == "")
                 return null;
             input = inputStr;
-            tokens = new List<(string, TokenType)>();
+            tokens = new List<(string, TerminalType)>();
             index = 0;
             buffer = "";
             ch = input[index];
@@ -246,7 +246,7 @@ namespace CMM
                 catch (Exception ex)
                 {
                     buffer = ex.Message;
-                    value = TokenType.ERR;
+                    value = TerminalType.ERR;
                     Read();
                 }
                 finally
@@ -257,7 +257,7 @@ namespace CMM
 
             // 添加结束符
             buffer = "$";
-            value = TokenType.END;
+            value = TerminalType.END;
             Read();
 
             return tokens;

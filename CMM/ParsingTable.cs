@@ -55,7 +55,7 @@ namespace CMM
         /// <param name="nEnum"></param>
         /// <param name="tokenType"></param>
         /// <returns></returns>
-        public List<ParsingTableItem> GetItem(NEnum nEnum, TokenType tokenType)
+        public List<ParsingTableItem> GetItem(NEnum nEnum, TerminalType tokenType)
         {
             return this.parsingTable[(int)nEnum, (int)tokenType];
         }

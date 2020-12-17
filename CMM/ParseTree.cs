@@ -31,7 +31,9 @@ namespace CMM
         /// </summary>
         public ParseTree()
         {
-            Root = new ParseTreeNode(false, TokenType.DEFAULT, NEnum.program);
+            Root = new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.program);
+            IsSuccess = true;
+            errorInfos = new List<ErrorInfo>();
         }
     }
 
@@ -50,7 +52,7 @@ namespace CMM
         /// <summary>
         /// 如果该结点是叶子结点，则该属性非空
         /// </summary>
-        public TokenType TSymbol { get; set; }
+        public TerminalType TSymbol { get; set; }
 
         /// <summary>
         /// 如果该结点是非叶子结点，则该属性非空
@@ -73,7 +75,7 @@ namespace CMM
         /// <param name="isLeaf">是否是叶子结点</param>
         /// <param name="tSymbol">如果是叶子结点，则是TokenSymbol的值，否则为default</param>
         /// <param name="nSymbol">如果是非叶子结点，则是NSymbol的值，否则为deault</param>
-        public ParseTreeNode(bool isLeaf, TokenType tSymbol, NEnum nSymbol)
+        public ParseTreeNode(bool isLeaf, TerminalType tSymbol, NEnum nSymbol)
         {
             this.IsLeaf = isLeaf;
             this.TSymbol = tSymbol;

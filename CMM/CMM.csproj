@@ -68,7 +68,8 @@
     <Compile Include="table\display.cs" />
     <Compile Include="table\nametab.cs" />
     <Compile Include="table\RowTabel.cs" />
-    <Compile Include="TokenType.cs" />
+    <Compile Include="TokenResult.cs" />
+    <Compile Include="TerminalType.cs" />
     <Compile Include="WordAnalyser.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

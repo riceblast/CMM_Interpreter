@@ -40,7 +40,7 @@ namespace CMM
             set { filePath = value; }
         }
 
-        List<(string, TokenType)> tokens;
+        List<(string, TerminalType)> tokens;
 
         public MainWindow()
         {
@@ -182,7 +182,7 @@ namespace CMM
                 return;
             }
 
-            foreach ((string value, TokenType id) in tokens)
+            foreach ((string value, TerminalType id) in tokens)
             {
                 output.Text += $"<{value},{id}>\n";
             }

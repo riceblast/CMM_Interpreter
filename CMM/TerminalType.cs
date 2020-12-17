@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CMM
 {
-    public enum TokenType
+    public enum TerminalType
     {
         IF,
         ELSE,
