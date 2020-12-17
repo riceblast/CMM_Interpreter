@@ -16,9 +16,11 @@ namespace CMM
 
     public class WordAnalyser
     {
-        
+
         //单词
-        static List<(string, TerminalType)> tokens;
+        static TokenResult result;
+        static Token token;
+        static ErrorInfo error;
         //关键字和特殊符号
         static string[] keywords = { "if", "else", "while", "read", "write", "int", "real" };
         static string[] symbols = { "+", "-", "*", "/", "=", "<", ">", "==", "<>", "(", ")", ";", "{", "}", "/*", "*/", "[", "]", ",", "." };
@@ -28,7 +30,7 @@ namespace CMM
         static char ch;
         static string input;
         static TerminalType value;
-        static bool flag;
+        static bool isAnalysing;
 
         //读取下一个字符
         static char Peek()
@@ -40,7 +42,7 @@ namespace CMM
             }
             else
             {
-                flag = false;
+                isAnalysing = false;
                 ch = '\0';
             }
             return ch;
@@ -58,7 +60,11 @@ namespace CMM
         //读取单词
         static void Read()
         {
-            tokens.Add((buffer, value));
+            token = new Token();
+            token.StrValue = buffer;
+            token.TokenType = value;
+
+            result.Tokens.Add(token);
             nametab tab = new nametab(buffer);
             NameTable.tabs.Add(tab);
             buffer = "";
@@ -119,6 +125,9 @@ namespace CMM
                     break;
                 case '*':
                     value = TerminalType.MUL;
+                    break;
+                case '>':
+                    value = TerminalType.GREATER;
                     break;
                 case '(':
                     value = TerminalType.LPARENT;
@@ -182,7 +191,7 @@ namespace CMM
             {
                 Concat();
             }
-            switch(Array.IndexOf(keywords, buffer))
+            switch (Array.IndexOf(keywords, buffer))
             {
                 case 0:
                     value = TerminalType.IF;
@@ -215,19 +224,24 @@ namespace CMM
             Read();
 
         }
+
         //词法分析
-        public static List<(string, TerminalType)> Analyse(string inputStr)
+        public static TokenResult Analyse(string inputStr)
         {
             if (inputStr == "")
                 return null;
             input = inputStr;
-            tokens = new List<(string, TerminalType)>();
             index = 0;
             buffer = "";
             ch = input[index];
-            flag = true;
 
-            while (flag)
+            isAnalysing = true;
+            result = new TokenResult();
+            result.Tokens = new List<Token>();
+            result.ErrorInfos = new List<ErrorInfo>();
+
+
+            while (isAnalysing)
             {
                 Concat();
                 try
@@ -245,9 +259,9 @@ namespace CMM
                 }
                 catch (Exception ex)
                 {
-                    buffer = ex.Message;
-                    value = TerminalType.ERR;
-                    Read();
+                    error = new ErrorInfo();
+                    error.Message = ex.Message;
+                    result.ErrorInfos.Add(error);
                 }
                 finally
                 {
@@ -260,7 +274,9 @@ namespace CMM
             value = TerminalType.END;
             Read();
 
-            return tokens;
+            result.IsSuccess = result.ErrorInfos.Count == 0 ? true : false;
+
+            return result;
         }
 
     }
