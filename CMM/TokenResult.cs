@@ -40,7 +40,7 @@ namespace CMM
         /// <summary>
         /// token对应的类型信息
         /// </summary>
-        public TerminalType tokenType { get; set; }
+        public TerminalType TokenType { get; set; }
 
         /// <summary>
         /// 该token所在的行数
