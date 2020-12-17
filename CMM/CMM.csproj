@@ -55,34 +55,25 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-<<<<<<< HEAD
     <Compile Include="Constant.cs" />
-=======
     <Compile Include="ErrorInfo.cs" />
->>>>>>> d2857142ebf0ea4a6ab1341cd06b49bd7c281381
     <Compile Include="NEnum.cs" />
     <Compile Include="ParseTree.cs" />
     <Compile Include="ParsingTable.cs" />
     <Compile Include="Production.cs" />
     <Compile Include="RowAnalyser.cs" />
-<<<<<<< HEAD
     <Compile Include="SemanticAnalysis.cs" />
     <Compile Include="SentenceAnalysis.cs" />
-=======
     <Compile Include="SyntacticAnalyser.cs" />
->>>>>>> d2857142ebf0ea4a6ab1341cd06b49bd7c281381
     <Compile Include="table\atab.cs" />
     <Compile Include="table\btab.cs" />
     <Compile Include="table\code.cs" />
     <Compile Include="table\display.cs" />
     <Compile Include="table\nametab.cs" />
     <Compile Include="table\RowTabel.cs" />
-<<<<<<< HEAD
     <Compile Include="table\ScopeTable.cs" />
-=======
     <Compile Include="TokenResult.cs" />
     <Compile Include="TerminalType.cs" />
->>>>>>> d2857142ebf0ea4a6ab1341cd06b49bd7c281381
     <Compile Include="WordAnalyser.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
