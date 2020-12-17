@@ -62,7 +62,6 @@
     <Compile Include="ParsingTable.cs" />
     <Compile Include="Production.cs" />
     <Compile Include="RowAnalyser.cs" />
-    <Compile Include="SemanticAnalysis.cs" />
     <Compile Include="SentenceAnalysis.cs" />
     <Compile Include="SyntacticAnalyser.cs" />
     <Compile Include="table\atab.cs" />

@@ -10,8 +10,14 @@ namespace CMM.table
     {
         //变量名
         public string name;
+
+        //类型
         public string type;
+
+        //值
         public string value;
+
+        //层数
         public int scope;
 
         public ScopeTable(string name, string type, string value, int scope)
@@ -19,7 +25,7 @@ namespace CMM.table
             this.name = name;
             this.type = type;
             this.value = value;
-            this.scope = scope; 
+            this.scope = scope;
         }
 
     }
