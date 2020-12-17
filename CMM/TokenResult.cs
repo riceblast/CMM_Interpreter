@@ -12,6 +12,27 @@ namespace CMM
     public class TokenResult
     {
         /// <summary>
+        /// 是否词法分析成功
+        /// </summary>
+        public bool IsSuccess { get; set; }
+
+        /// <summary>
+        /// 词法分析结果的token串
+        /// </summary>
+        public List<Token> Tokens { get; set; }
+
+        /// <summary>
+        /// 词法分析中的错误信息
+        /// </summary>
+        public List<ErrorInfo> ErrorInfos { get; set; }
+    }
+
+    /// <summary>
+    /// 词法分析结果中的单词
+    /// </summary>
+    public class Token
+    {
+        /// <summary>
         /// 该token的字符串字面值
         /// </summary>
         public string StrValue { get; set; }
