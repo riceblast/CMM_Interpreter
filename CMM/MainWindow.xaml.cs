@@ -40,8 +40,6 @@ namespace CMM
             set { filePath = value; }
         }
 
-        List<(string, TerminalType)> tokens;
-
         public MainWindow()
         {
             InitializeComponent();
@@ -174,19 +172,18 @@ namespace CMM
         private void Run(object sender, RoutedEventArgs e)
         {
             inputstr = input.Text;
-
-            tokens = WordAnalyser.Analyse(inputstr);
+            List<Token> tokens = WordAnalyser.Analyse(inputstr).Tokens;
             if (tokens == null)
             {
                 MessageBox.Show("没有文本");
                 return;
             }
 
-            foreach ((string value, TerminalType id) in tokens)
+            foreach (Token token in tokens)
             {
-                output.Text += $"<{value},{id}>\n";
+                output.Text += $"<{token.StrValue},{token.TokenType}>\n";
             }
-            foreach (RowTabel item  in RowAnalyser.run(inputstr))
+            foreach (RowTabel item in RowAnalyser.run(inputstr))
             {
                 output.Text += $"<{item.Name},{item.Id},{item.Row},{item.Num}>\n";
             }
