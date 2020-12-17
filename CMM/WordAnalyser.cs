@@ -229,7 +229,7 @@ namespace CMM
         public static TokenResult Analyse(string inputStr)
         {
             if (inputStr == "")
-                return null;
+                return new TokenResult();
             input = inputStr;
             index = 0;
             buffer = "";
@@ -237,9 +237,6 @@ namespace CMM
 
             isAnalysing = true;
             result = new TokenResult();
-            result.Tokens = new List<Token>();
-            result.ErrorInfos = new List<ErrorInfo>();
-
 
             while (isAnalysing)
             {

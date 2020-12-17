@@ -25,6 +25,12 @@ namespace CMM
         /// 词法分析中的错误信息
         /// </summary>
         public List<ErrorInfo> ErrorInfos { get; set; }
+
+        public TokenResult()
+        {
+            Tokens = new List<Token>();
+            ErrorInfos = new List<ErrorInfo>();
+        }
     }
 
     /// <summary>
