@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace CMM
 {
     //名字表
-    class nametab
+    public class nametab
     {
         //名字标识符串
         private string name;
