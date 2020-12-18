@@ -53,6 +53,7 @@ namespace CMM
         public ParseTree SyntacticAnalysis(TokenResult tokenResult)
         {
             bool isSuccess = true; // 表示语法分析是否成功
+            List<ErrorInfo> totalErrorInfos = new List<ErrorInfo>(); // 总的报错信息
 
             // 将所有token读入栈
             for (int i = tokenResult.Tokens.Count - 1; i >= 0; i--)
@@ -72,18 +73,18 @@ namespace CMM
             Token token; // 输入串中的当前讨论的token
             ParseTreeNode symbolNode; // 符号表中当前讨论的结点
 
-            while (inputStack.Count > 0)
+            while (inputStack.Count > 0 && symbolStack.Count > 0)
             {
                 token = inputStack.Peek();
                 symbolNode = symbolStack.Peek();
 
                 #region 特殊非终结符号处理
                 // 遇到标识符特殊考虑
-                List<ErrorInfo> variableErrorInfos;
+                List<ErrorInfo> variableErrorInfos, expErrorInfos;
                 if (symbolNode.NSymbol == NEnum.variable)
                 {
-                    // TODO 考虑后续的出错处理
                     this.VariableAnalyse(symbolNode, out variableErrorInfos);
+                    totalErrorInfos.AddRange(variableErrorInfos);
                     continue;
                 }
 
@@ -91,7 +92,8 @@ namespace CMM
                 if (symbolNode.NSymbol == NEnum.exp)
                 {
                     // TODO 特殊考虑表达式
-
+                    this.ExpAnalyse(symbolNode, out expErrorInfos);
+                    totalErrorInfos.AddRange(expErrorInfos);
                     continue;
                 }
                 #endregion
@@ -113,7 +115,7 @@ namespace CMM
                         else
                         {
                             // TODO 语法分析出错处理
-
+                            
                             isSuccess = false;
                         }
                     }
@@ -499,7 +501,168 @@ namespace CMM
         /// </summary>
         private void Error()
         {
-            throw new NotImplementedException();
+            // 找到当前符号表栈顶元素对应的"式后字"
+            // 将符号表栈顶元素出栈
+            // 将"式后字"之前的所有非终结符号出栈
+            
+            ParseTreeNode symbolNode = this.symbolStack.Peek();
+            this.targetTree.IsSuccess = false;
+
+            // 如果是终结符号则直接出栈
+            if (symbolNode.IsLeaf)
+            {
+                symbolStack.Pop();
+                if(inputStack.Count > 0)
+                {
+                    inputStack.Pop();
+                }
+
+            }
+            else
+            {
+                // 如果是非终结符号则找对应的follow集合
+                switch (symbolNode.NSymbol)
+                {
+                    case NEnum.program:
+                        // $
+                        ProcessFollowTerminal(TerminalType.END);
+                        break;
+                    case NEnum.stmt_sequence:
+                        // $ }
+                        ProcessFollowTerminal(TerminalType.END, TerminalType.RBRACE);
+                        break;
+                    case NEnum.statement:
+                        // if while id read write int real } $
+                        ProcessFollowTerminal(TerminalType.IF, TerminalType.WHILE, TerminalType.ID,
+                            TerminalType.READ, TerminalType.WRITE, TerminalType.INT, TerminalType.REAL,
+                            TerminalType.RBRACE, TerminalType.END);
+                        break;
+                    case NEnum.stmt_block:
+                        // if while id read write int real } else
+                        ProcessFollowTerminal(TerminalType.IF, TerminalType.WHILE, TerminalType.ID,
+                            TerminalType.READ, TerminalType.WRITE, TerminalType.INT, TerminalType.REAL,
+                            TerminalType.RBRACE, TerminalType.END);
+                        break;
+                    case NEnum.if_stmt:
+                        // if while id read write int real } else
+                        ProcessFollowTerminal(TerminalType.IF, TerminalType.WHILE, TerminalType.ID,
+                            TerminalType.READ, TerminalType.WRITE, TerminalType.INT, TerminalType.REAL,
+                            TerminalType.RBRACE, TerminalType.END);
+                        break;
+                    case NEnum.if_stmt_block:
+                        // else
+                        ProcessFollowTerminal(TerminalType.ELSE);
+                        break;
+                    case NEnum.else_stmt_block:
+                        // if while id read write int real } else
+                        ProcessFollowTerminal(TerminalType.IF, TerminalType.WHILE, TerminalType.ID,
+                            TerminalType.READ, TerminalType.WRITE, TerminalType.INT, TerminalType.REAL,
+                            TerminalType.RBRACE, TerminalType.END);
+                        break;
+                    case NEnum.while_stmt:
+                        // if while id read write int real } else
+                        ProcessFollowTerminal(TerminalType.IF, TerminalType.WHILE, TerminalType.ID,
+                            TerminalType.READ, TerminalType.WRITE, TerminalType.INT, TerminalType.REAL,
+                            TerminalType.RBRACE, TerminalType.END);
+                        break;
+                    case NEnum.assign_stmt:
+                        // if while id read write int real } else
+                        ProcessFollowTerminal(TerminalType.IF, TerminalType.WHILE, TerminalType.ID,
+                            TerminalType.READ, TerminalType.WRITE, TerminalType.INT, TerminalType.REAL,
+                            TerminalType.RBRACE, TerminalType.END);
+                        break;
+                    case NEnum.read_stmt:
+                        // if while id read write int real } else
+                        ProcessFollowTerminal(TerminalType.IF, TerminalType.WHILE, TerminalType.ID,
+                            TerminalType.READ, TerminalType.WRITE, TerminalType.INT, TerminalType.REAL,
+                            TerminalType.RBRACE, TerminalType.END);
+                        break;
+                    case NEnum.write_stmt:
+                        // if while id read write int real } else
+                        ProcessFollowTerminal(TerminalType.IF, TerminalType.WHILE, TerminalType.ID,
+                            TerminalType.READ, TerminalType.WRITE, TerminalType.INT, TerminalType.REAL,
+                            TerminalType.RBRACE, TerminalType.END);
+                        break;
+                    case NEnum.declare_stmt:
+                        // if while id read write int real } else
+                        ProcessFollowTerminal(TerminalType.IF, TerminalType.WHILE, TerminalType.ID,
+                            TerminalType.READ, TerminalType.WRITE, TerminalType.INT, TerminalType.REAL,
+                            TerminalType.RBRACE, TerminalType.END);
+                        break;
+                    case NEnum.variable:
+                        // < > <> == ) ; ] * / + -
+                        ProcessFollowTerminal(TerminalType.LESS, TerminalType.GREATER, TerminalType.EQUAL,
+                            TerminalType.RPARENT, TerminalType.SEMI, TerminalType.RBRACKET, TerminalType.MUL,
+                            TerminalType.DIV, TerminalType.PLUS, TerminalType.MINUS,TerminalType.NOTEQUAL);
+                        break;
+                    case NEnum.exp:
+                        // + - * / < > <> == ) ;
+                        ProcessFollowTerminal(TerminalType.PLUS, TerminalType.MINUS, TerminalType.MUL,
+                            TerminalType.DIV, TerminalType.LESS, TerminalType.GREATER, TerminalType.EQUAL,
+                            TerminalType.NOTEQUAL, TerminalType.RPARENT, TerminalType.SEMI);
+                        break;
+                    case NEnum.addtive_exp:
+                        // + - * / < > <> == ) ;
+                        ProcessFollowTerminal(TerminalType.PLUS, TerminalType.MINUS, TerminalType.MUL,
+                            TerminalType.DIV, TerminalType.LESS, TerminalType.GREATER, TerminalType.EQUAL,
+                            TerminalType.NOTEQUAL, TerminalType.RPARENT, TerminalType.SEMI);
+                        break;
+                    case NEnum.term:
+                        // + - * / < > <> == ) ;
+                        ProcessFollowTerminal(TerminalType.PLUS, TerminalType.MINUS, TerminalType.MUL,
+                            TerminalType.DIV, TerminalType.LESS, TerminalType.GREATER, TerminalType.EQUAL,
+                            TerminalType.NOTEQUAL, TerminalType.RPARENT, TerminalType.SEMI);
+                        break;
+                    case NEnum.factor:
+                        // + - * / < > <> == ) ;
+                        ProcessFollowTerminal(TerminalType.PLUS, TerminalType.MINUS, TerminalType.MUL,
+                            TerminalType.DIV, TerminalType.LESS, TerminalType.GREATER, TerminalType.EQUAL,
+                            TerminalType.NOTEQUAL, TerminalType.RPARENT, TerminalType.SEMI);
+                        break;
+                    case NEnum.logical_op:
+                        // ( intVal realVal id + -
+                        ProcessFollowTerminal(TerminalType.LPARENT, TerminalType.INTVAL, TerminalType.REALVAL,
+                            TerminalType.ID, TerminalType.PLUS, TerminalType.MINUS);
+                        break;
+                    case NEnum.add_op:
+                        // ( intVal realVal id + -
+                        ProcessFollowTerminal(TerminalType.LPARENT, TerminalType.INTVAL, TerminalType.REALVAL,
+                            TerminalType.ID, TerminalType.PLUS, TerminalType.MINUS);
+                        break;
+                    case NEnum.mul_op:
+                        // ( intVal realVal id + -
+                        ProcessFollowTerminal(TerminalType.LPARENT, TerminalType.INTVAL, TerminalType.REALVAL,
+                            TerminalType.ID, TerminalType.PLUS, TerminalType.MINUS);
+                        break;
+
+                }
+            }
+        }
+
+        /// <summary>
+        /// 处理式后字的程序
+        /// 在inputStack中寻找当前非终结符号的式后字
+        /// 将式后字之前的所有的输入字符串出栈
+        /// 将符号栈栈顶出栈
+        /// </summary>
+        private void ProcessFollowTerminal(params TerminalType[] tEnums)
+        {
+            Token token; // 记录输入串栈顶的符号
+
+            // 将symbolStack栈顶出栈
+            this.symbolStack.Pop();
+
+            // 寻找式后字并将输入符号串出栈
+            while(inputStack.Count > 0)
+            {
+                token = inputStack.Pop();
+
+                // 如果找到了式后字，则将输入串放回栈顶
+                if (tEnums.Contains(token.TokenType))
+                {
+                    inputStack.Push(token);
+                }
+            }
         }
     }
 }
