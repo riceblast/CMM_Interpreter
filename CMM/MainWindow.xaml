@@ -3,15 +3,22 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:CMM" xmlns:smtx="clr-namespace:ShowMeTheXAML;assembly=ShowMeTheXAML" xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" xmlns:system="clr-namespace:System;assembly=mscorlib"
+        xmlns:local="clr-namespace:CMM" xmlns:smtx="clr-namespace:ShowMeTheXAML;assembly=ShowMeTheXAML" 
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="CMM" Height="631.52" Width="809.667">
+        Title="CMM" Height="631.52" Width="809.667"
+        WindowStyle="SingleBorderWindow"
+        Background="AliceBlue"
+        >
+
+    
     <Grid Margin="0,0,0,0">
 
         <DockPanel Name="DP1" Margin="0,0,0,180">
-            <smtx:XamlDisplay Name="menus_1" DockPanel.Dock="Top" BorderThickness="1" Margin="5,5,5,5"
-               HorizontalAlignment="Left" Height="40">
-                <Menu DockPanel.Dock="Top" BorderBrush="Black" Background="White" Height="120">
+            <smtx:XamlDisplay Name="menus_1" DockPanel.Dock="Top" BorderThickness="1" Margin="0,0,0,0"
+               HorizontalAlignment="Left" Height="24" Width="199">
+                <Menu DockPanel.Dock="Top" BorderBrush="Black" Background="White" Margin="0,0,0,0" Width="251" Height="24" VerticalAlignment="Bottom">
                     <MenuItem Header="文件" >
                         <MenuItem Header="新建" Click="MenuItem_File_News"></MenuItem>
                         <MenuItem Header="打开" Click="MenuItem_File_Open"></MenuItem>
@@ -33,14 +40,14 @@
                         <MenuItem Header="run" Click="Run"></MenuItem>
                         <MenuItem Header="debug"></MenuItem>
                     </MenuItem>
-                    <MenuItem Header="帮助">
+                    <MenuItem Header="帮助" >
                         <MenuItem Header="开发者信息"></MenuItem>
                     </MenuItem>
                 </Menu>
             </smtx:XamlDisplay>
             <smtx:XamlDisplay Name="menus_2" DockPanel.Dock="Top" Margin="5,5,1,5" BorderThickness="1"
               HorizontalAlignment="Left"  >
-                <ToolBarTray Margin="0,0,0,0"  Width="800">
+                <ToolBarTray Margin="0,0,0,0"  Width="800" Height="29">
                     <ToolBar Style="{DynamicResource MaterialDesignToolBar}" ClipToBounds="False">
                         <Button ToolTip="Save">
                             <materialDesign:PackIcon Kind="ContentSave" />
@@ -83,16 +90,16 @@
                     </ToolBar>
                 </ToolBarTray>
             </smtx:XamlDisplay>
-            <smtx:XamlDisplay Name="text1" Margin="5,0,0,0"  DockPanel.Dock="Left" Width="600" Height="300" HorizontalAlignment="Left">
+            <smtx:XamlDisplay Name="text1" Margin="5,0,0,0"  DockPanel.Dock="Left" Width="600" Height="350" HorizontalAlignment="Left">
                 <avalonEdit:TextEditor
             xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
-            Name="TextEditor"
+            Name="input"
             SyntaxHighlighting="C++"
             FontFamily="Consolas"
             FontSize="10pt" 
             LineNumbersForeground="Black" 
             Background="#FFF2EEC7"
-            ShowLineNumbers="True" Margin="0,0,0,0" Width="600" Height="300">
+            ShowLineNumbers="True" Margin="0,0,0,0" Width="600" Height="350">
                     <avalonEdit:TextEditor.Options>
                         <avalonEdit:TextEditorOptions ShowSpaces="True" WordWrapIndentation="4" InheritWordWrapIndentation="true" >
                             <avalonEdit:TextEditorOptions.ColumnRulerPosition>
@@ -103,7 +110,7 @@
                 </avalonEdit:TextEditor>
             </smtx:XamlDisplay>
 
-            <smtx:XamlDisplay Margin="5,0,0,0" Width="200" Height="300" DockPanel.Dock="Right" HorizontalAlignment="Left">
+            <smtx:XamlDisplay Margin="5,0,0,0" Width="200" Height="350" DockPanel.Dock="Right" HorizontalAlignment="Left">
                 <TextBox x:Name="output"
                      DockPanel.Dock="Right"
                          materialDesign:HintAssist.Hint="输出窗口"
@@ -111,15 +118,15 @@
                          ScrollViewer.VerticalScrollBarVisibility="Visible"
                          TextWrapping="Wrap"
                          AcceptsReturn="True"
-                     Background="DarkKhaki" Margin="0,0,0,0" Width="200" Height="300" />
+                     Background="DarkKhaki" Margin="0,0,0,0" Width="200" Height="350" />
 
             </smtx:XamlDisplay>
         </DockPanel>
 
-        <smtx:XamlDisplay Height="150" Margin="5,5,5,5" VerticalAlignment="Bottom">
+        <smtx:XamlDisplay Height="170" Margin="5,0,5.333,5" VerticalAlignment="Bottom">
             <TextBox x:Name="debugBox" VerticalContentAlignment="Top" HorizontalContentAlignment="Left" materialDesign:ScrollBarAssist.ButtonsVisibility="Visible" AcceptsReturn="True" AcceptsTab="True"
                      materialDesign:HintAssist.Hint="调试窗口" Background="AntiqueWhite" 
-                         VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Height="140" Width="782"/>
+                         VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Height="161" Width="800"/>
         </smtx:XamlDisplay>
 
 
