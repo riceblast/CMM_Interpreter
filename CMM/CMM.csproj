@@ -55,13 +55,24 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Constant.cs" />
+    <Compile Include="ErrorInfo.cs" />
+    <Compile Include="NEnum.cs" />
+    <Compile Include="ParseTree.cs" />
+    <Compile Include="ParsingTable.cs" />
+    <Compile Include="Production.cs" />
     <Compile Include="RowAnalyser.cs" />
+    <Compile Include="SentenceAnalysis.cs" />
+    <Compile Include="SyntacticAnalyser.cs" />
     <Compile Include="table\atab.cs" />
     <Compile Include="table\btab.cs" />
     <Compile Include="table\code.cs" />
     <Compile Include="table\display.cs" />
     <Compile Include="table\nametab.cs" />
     <Compile Include="table\RowTabel.cs" />
+    <Compile Include="table\ScopeTable.cs" />
+    <Compile Include="TokenResult.cs" />
+    <Compile Include="TerminalType.cs" />
     <Compile Include="WordAnalyser.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -101,6 +112,17 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="MSScriptControl">
+      <Guid>{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -9,7 +9,7 @@ namespace CMM.table
     class RowTabel
     {
         public String Name { get; set; }
-        public TokenType Id { get; set; }
+        public TerminalType Id { get; set; }
         public int Row { get; set; }
         public int Num { get; set; }
     }

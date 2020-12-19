@@ -9,49 +9,18 @@ using System.Threading.Tasks;
 namespace CMM
 {
 
-    class NameTable
+    public class NameTable
     {
         public static List<nametab> tabs = new List<nametab>();
     }
 
-    enum TokenType
+    public class WordAnalyser
     {
-        IF,
-        ELSE,
-        WHILE,
-        READ,
-        WRITE,
-        INT,
-        REAL,
-        PLUS,
-        MINUS,
-        MUL,
-        DIV,
-        ASSIGN,
-        LESS,
-        GREATER,
-        EQUAL,
-        NOTEQUAL,
-        LPARENT,
-        RPARENT,
-        SEMI,
-        LBRACE,
-        RBRACE,
-        NOTES,
-        LBRACKET,
-        RBRACKET,
-        COMMA,
-        INTVAL,
-        REALVAL,
-        ID,
-        ERR
-    }
 
-    class WordAnalyser
-    {
-        
         //单词
-        static List<(string, TokenType)> tokens;
+        static TokenResult result;
+        static Token token;
+        static ErrorInfo error;
         //关键字和特殊符号
         static string[] keywords = { "if", "else", "while", "read", "write", "int", "real" };
         static string[] symbols = { "+", "-", "*", "/", "=", "<", ">", "==", "<>", "(", ")", ";", "{", "}", "/*", "*/", "[", "]", ",", "." };
@@ -60,8 +29,8 @@ namespace CMM
         static int index;
         static char ch;
         static string input;
-        static TokenType value;
-        static bool flag;
+        static TerminalType value;
+        static bool isAnalysing;
 
         //读取下一个字符
         static char Peek()
@@ -73,7 +42,7 @@ namespace CMM
             }
             else
             {
-                flag = false;
+                isAnalysing = false;
                 ch = '\0';
             }
             return ch;
@@ -91,7 +60,11 @@ namespace CMM
         //读取单词
         static void Read()
         {
-            tokens.Add((buffer, value));
+            token = new Token();
+            token.StrValue = buffer;
+            token.TokenType = value;
+
+            result.Tokens.Add(token);
             nametab tab = new nametab(buffer);
             NameTable.tabs.Add(tab);
             buffer = "";
@@ -105,25 +78,25 @@ namespace CMM
                 case '=':
                     if (Peek() == '=')
                     {
-                        value = TokenType.EQUAL;
+                        value = TerminalType.EQUAL;
                         Concat();
                     }
                     else
                     {
                         Retract();
-                        value = TokenType.ASSIGN;
+                        value = TerminalType.ASSIGN;
                     }
                     break;
                 case '<':
                     if (Peek() == '>')
                     {
-                        value = TokenType.NOTEQUAL;
+                        value = TerminalType.NOTEQUAL;
                         Concat();
                     }
                     else
                     {
                         Retract();
-                        value = TokenType.LESS;
+                        value = TerminalType.LESS;
                     }
                     break;
                 case '/':
@@ -136,46 +109,49 @@ namespace CMM
                             if (ch == '\0')
                                 throw new Exception("注释错误");
                         }
-                        value = TokenType.NOTES;
+                        value = TerminalType.NOTES;
                     }
                     else
                     {
                         Retract();
-                        value = TokenType.DIV;
+                        value = TerminalType.DIV;
                     }
                     break;
                 case '+':
-                    value = TokenType.PLUS;
+                    value = TerminalType.PLUS;
                     break;
                 case '-':
-                    value = TokenType.MINUS;
+                    value = TerminalType.MINUS;
                     break;
                 case '*':
-                    value = TokenType.MUL;
+                    value = TerminalType.MUL;
+                    break;
+                case '>':
+                    value = TerminalType.GREATER;
                     break;
                 case '(':
-                    value = TokenType.LPARENT;
+                    value = TerminalType.LPARENT;
                     break;
                 case ')':
-                    value = TokenType.RPARENT;
+                    value = TerminalType.RPARENT;
                     break;
                 case ';':
-                    value = TokenType.SEMI;
+                    value = TerminalType.SEMI;
                     break;
                 case '{':
-                    value = TokenType.LBRACE;
+                    value = TerminalType.LBRACE;
                     break;
                 case '}':
-                    value = TokenType.RBRACE;
+                    value = TerminalType.RBRACE;
                     break;
                 case '[':
-                    value = TokenType.LBRACKET;
+                    value = TerminalType.LBRACKET;
                     break;
                 case ']':
-                    value = TokenType.RBRACKET;
+                    value = TerminalType.RBRACKET;
                     break;
                 case ',':
-                    value = TokenType.COMMA;
+                    value = TerminalType.COMMA;
                     break;
                 default:
                     throw new Exception("特殊符号错误");
@@ -190,7 +166,7 @@ namespace CMM
             {
                 Concat();
             }
-            value = TokenType.INTVAL;
+            value = TerminalType.INTVAL;
             if (ch == '.')
             {
                 Concat();
@@ -198,7 +174,7 @@ namespace CMM
                 {
                     Concat();
                 }
-                value = TokenType.REALVAL;
+                value = TerminalType.REALVAL;
             }
             if (Char.IsLetter(ch) || ch == '.')
                 throw new Exception("数字错误");
@@ -215,31 +191,31 @@ namespace CMM
             {
                 Concat();
             }
-            switch(Array.IndexOf(keywords, buffer))
+            switch (Array.IndexOf(keywords, buffer))
             {
                 case 0:
-                    value = TokenType.IF;
+                    value = TerminalType.IF;
                     break;
                 case 1:
-                    value = TokenType.ELSE;
+                    value = TerminalType.ELSE;
                     break;
                 case 2:
-                    value = TokenType.WHILE;
+                    value = TerminalType.WHILE;
                     break;
                 case 3:
-                    value = TokenType.READ;
+                    value = TerminalType.READ;
                     break;
                 case 4:
-                    value = TokenType.WRITE;
+                    value = TerminalType.WRITE;
                     break;
                 case 5:
-                    value = TokenType.INT;
+                    value = TerminalType.INT;
                     break;
                 case 6:
-                    value = TokenType.REAL;
+                    value = TerminalType.REAL;
                     break;
                 default:
-                    value = TokenType.ID;
+                    value = TerminalType.ID;
                     break;
             }
             Retract();
@@ -248,19 +224,21 @@ namespace CMM
             Read();
 
         }
+
         //词法分析
-        public static List<(string, TokenType)> Analyse(string inputStr)
+        public static TokenResult Analyse(string inputStr)
         {
             if (inputStr == "")
-                return null;
+                return new TokenResult();
             input = inputStr;
-            tokens = new List<(string, TokenType)>();
             index = 0;
             buffer = "";
             ch = input[index];
-            flag = true;
 
-            while (flag)
+            isAnalysing = true;
+            result = new TokenResult();
+
+            while (isAnalysing)
             {
                 Concat();
                 try
@@ -278,17 +256,24 @@ namespace CMM
                 }
                 catch (Exception ex)
                 {
-                    buffer = ex.Message;
-                    value = TokenType.ERR;
-                    Read();
+                    error = new ErrorInfo();
+                    error.Message = ex.Message;
+                    result.ErrorInfos.Add(error);
                 }
                 finally
                 {
                     Peek();
                 }
-            } 
+            }
 
-            return tokens;
+            // 添加结束符
+            buffer = "$";
+            value = TerminalType.END;
+            Read();
+
+            result.IsSuccess = result.ErrorInfos.Count == 0 ? true : false;
+
+            return result;
         }
 
     }
