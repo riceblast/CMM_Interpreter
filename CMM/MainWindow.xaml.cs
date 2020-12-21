@@ -1,4 +1,6 @@
 ﻿using CMM.table;
+using ICSharpCode.AvalonEdit.Editing;
+using ICSharpCode.AvalonEdit.Rendering;
 using Microsoft.Win32;
 using System;
 using System.Collections;
@@ -15,6 +17,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.TextFormatting;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
@@ -28,7 +31,59 @@ namespace CMM
         private String filePath = "";
         private bool isSave = false;
         private string inputstr="";
+        private static Dictionary<int, Point> breakPoints;
 
+        private class BreakPointMargin : AbstractMargin
+        {
+            private const int margin = 20;
+            private TextArea textArea;
+
+            protected override HitTestResult HitTestCore(PointHitTestParameters hitTestParameters)
+            {
+                return new PointHitTestResult(this, hitTestParameters.HitPoint);
+            }
+
+            protected override Size MeasureOverride(Size availableSize)
+            {
+                return new Size(margin, 0);
+            }
+            protected override void OnRender(DrawingContext context)
+            {
+                Size renderSize = this.RenderSize;
+                context.DrawRectangle(SystemColors.ControlBrush, null,
+                                             new Rect(0, 0, renderSize.Width, renderSize.Height));
+                
+                foreach(KeyValuePair<int,Point> kv in breakPoints)
+                {
+                    context.DrawRectangle(VisualOpacityMask, new Pen(Brushes.Red, 10), new Rect(kv.Value,new Size(2,1)));
+                }
+            }
+
+            protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+            {
+                base.OnMouseLeftButtonDown(e);
+                TextView textView = this.TextView;
+                Point pos = e.GetPosition(TextView);
+                pos.X = 0;
+                ////pos.Y = pos.Y.CoerceValue(0, TextView.ActualHeight);
+                //pos.Y = TextView.ActualHeight;
+                pos.Y += TextView.VerticalOffset;
+                VisualLine vl = TextView.GetVisualLineFromVisualTop(pos.Y);
+                TextLine tl = vl.GetTextLineByVisualYPosition(pos.Y);
+                int lineNumber = vl.FirstDocumentLine.LineNumber;
+                if (breakPoints.ContainsKey(lineNumber))
+                {
+                    breakPoints.Remove(lineNumber);
+                }
+                else
+                {
+                    breakPoints.Add(lineNumber, pos);
+                }
+                this.InvalidateVisual();
+            }
+
+
+        }
         public bool IsSave
         {
             get { return isSave; }
@@ -43,19 +98,8 @@ namespace CMM
         public MainWindow()
         {
             InitializeComponent();
-
-
-            //string a = @"ii98989_ fsd___fsaf fdsafasfd0 12 12.9 12.0 22. bb[] a[11] { } /* sssssssss */  /* Com
-            // * me
-            // * n
-            // * 
-            // * t
-            // * 
-            // * s..
-            // * . 
-            // */
-            // 12
-            //   1";
+            breakPoints = new Dictionary<int, Point>();
+            input.TextArea.LeftMargins.Insert(0, new BreakPointMargin());
             
         }
 
