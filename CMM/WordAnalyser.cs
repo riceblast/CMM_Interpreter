@@ -17,7 +17,7 @@ namespace CMM
     public class WordAnalyser
     {
 
-        //单词
+        //词法分析结果
         static TokenResult result;
         static Token token;
         static ErrorInfo error;
@@ -32,7 +32,13 @@ namespace CMM
         static TerminalType value;
         static bool isAnalysing;
 
-        //读取下一个字符
+        static int line;
+
+
+        /// <summary>
+        /// 读取下一个字符，若读到末尾返回\0
+        /// </summary>
+        /// <returns>字符值</returns>
         static char Peek()
         {
             ++index;
@@ -47,29 +53,43 @@ namespace CMM
             }
             return ch;
         }
-        //加入缓冲
+
+        /// <summary>
+        /// 当前字符加入缓冲
+        /// </summary>
         static void Concat()
         {
             buffer += ch;
         }
-        //回退
+
+        /// <summary>
+        /// 回退到上一字符
+        /// </summary>
         static void Retract()
         {
             ch = input[--index];
         }
-        //读取单词
+
+        /// <summary>
+        /// 读取单词到词法分析结果
+        /// </summary>
         static void Read()
         {
-            token = new Token();
-            token.StrValue = buffer;
-            token.TokenType = value;
-
+            token = new Token
+            {
+                StrValue = buffer,
+                TokenType = value,
+                LineNum = line
+            };
             result.Tokens.Add(token);
             nametab tab = new nametab(buffer);
             NameTable.tabs.Add(tab);
             buffer = "";
         }
-        //分析特殊符号
+
+        /// <summary>
+        /// 分析特殊符号开头的单词
+        /// </summary>
         static void AnalyseSymbol()
         {
 
@@ -103,13 +123,16 @@ namespace CMM
                     if (Peek() == '*')
                     {
                         buffer = "";
+                        value = TerminalType.NOTES;
+                        Read();
                         //跳过注释
                         while (Peek() != '*' || Peek() != '/')
                         {
+                            AnalyseRow();
                             if (ch == '\0')
-                                throw new Exception("注释错误");
+                                throw new Exception("注释错误：没有注释结尾");
                         }
-                        value = TerminalType.NOTES;
+                        return;
                     }
                     else
                     {
@@ -154,12 +177,15 @@ namespace CMM
                     value = TerminalType.COMMA;
                     break;
                 default:
-                    throw new Exception("特殊符号错误");
+                    throw new Exception("符号错误：未知符号");
             }
             Read();
 
         }
-        //分析数字
+
+        /// <summary>
+        /// 分析数字
+        /// </summary>
         static void AnalyseNumber()
         {
             while (Char.IsDigit(Peek()))
@@ -177,13 +203,16 @@ namespace CMM
                 value = TerminalType.REALVAL;
             }
             if (Char.IsLetter(ch) || ch == '.')
-                throw new Exception("数字错误");
+                throw new Exception("数字错误：多个小数点");
             Retract();
             if (ch == '.')
-                throw new Exception("数字错误");
+                throw new Exception("数字错误：小数点后应该是数字");
             Read();
         }
-        //分析标识符和保留字
+
+        /// <summary>
+        /// 分析标识符和保留字
+        /// </summary>
         static void AnalyseIdAndKey()
         {
 
@@ -220,18 +249,35 @@ namespace CMM
             }
             Retract();
             if (ch == '_')
-                throw new Exception("标识符错误");
+                throw new Exception("标识符错误：标识符格式不正确");
             Read();
 
         }
 
-        //词法分析
+        static void AnalyseRow()
+        {
+            buffer = "";
+            if (ch == '\r')
+            {
+                if (Peek() == '\n')
+                    line++;
+                else
+                    Retract();
+            }
+        }
+
+        /// <summary>
+        /// 词法分析程序主体
+        /// </summary>
+        /// <param name="inputStr">要分析的文本</param>
+        /// <returns>词法分析结果</returns>
         public static TokenResult Analyse(string inputStr)
         {
-            if (inputStr == "")
+            if (inputStr == null || inputStr == "")
                 return new TokenResult();
             input = inputStr;
             index = 0;
+            line = 1;
             buffer = "";
             ch = input[index];
 
@@ -250,14 +296,13 @@ namespace CMM
                     else if (Char.IsLetter(ch) || ch == '_')
                         AnalyseIdAndKey();
                     else if (Char.IsWhiteSpace(ch))
-                        buffer = "";
+                        AnalyseRow();
                     else
-                        throw new Exception("未知符号错误");
+                        throw new Exception("符号错误：未知符号");
                 }
                 catch (Exception ex)
                 {
-                    error = new ErrorInfo();
-                    error.Message = ex.Message;
+                    error = new ErrorInfo(line, ex.Message);
                     result.ErrorInfos.Add(error);
                 }
                 finally
@@ -271,7 +316,7 @@ namespace CMM
             value = TerminalType.END;
             Read();
 
-            result.IsSuccess = result.ErrorInfos.Count == 0 ? true : false;
+            result.IsSuccess = result.ErrorInfos.Count == 0;
 
             return result;
         }
