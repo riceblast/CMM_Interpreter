@@ -99,6 +99,8 @@
             FontSize="10pt" 
             LineNumbersForeground="Black" 
             Background="#FFF2EEC7"
+            VerticalScrollBarVisibility="Visible" 
+            HorizontalScrollBarVisibility="Auto" 
             ShowLineNumbers="True" Margin="0,0,0,0" Width="600" Height="350">
                     <avalonEdit:TextEditor.Options>
                         <avalonEdit:TextEditorOptions ShowSpaces="True" WordWrapIndentation="4" InheritWordWrapIndentation="true" >
@@ -107,6 +109,7 @@
                             </avalonEdit:TextEditorOptions.ColumnRulerPosition>
                         </avalonEdit:TextEditorOptions>
                     </avalonEdit:TextEditor.Options>
+            
                 </avalonEdit:TextEditor>
             </smtx:XamlDisplay>
 
