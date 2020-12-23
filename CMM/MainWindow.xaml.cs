@@ -35,7 +35,7 @@ namespace CMM
 
         private class BreakPointMargin : AbstractMargin
         {
-            private const int margin = 20;
+            private const int margin = 10;
             private TextArea textArea;
 
             protected override HitTestResult HitTestCore(PointHitTestParameters hitTestParameters)
@@ -55,7 +55,7 @@ namespace CMM
                 
                 foreach(KeyValuePair<int,Point> kv in breakPoints)
                 {
-                    context.DrawRectangle(VisualOpacityMask, new Pen(Brushes.Red, 10), new Rect(kv.Value,new Size(2,1)));
+                    context.DrawRectangle(VisualOpacityMask, new Pen(Brushes.Red, 8), new Rect(kv.Value,new Size(2,1)));
                 }
             }
 
