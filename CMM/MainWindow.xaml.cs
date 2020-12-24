@@ -172,6 +172,8 @@ namespace CMM
         private void Run(object sender, RoutedEventArgs e)
         {
             inputstr = input.Text;
+
+
             List<Token> tokens = WordAnalyser.Analyse(inputstr).Tokens;
             if (tokens == null)
             {

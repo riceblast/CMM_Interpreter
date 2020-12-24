@@ -236,6 +236,8 @@ namespace CMM
                 }
             }
         }
+
+
         public static bool expJudge(ParseTreeNode node)
         {
             string result = expToValue(node);
@@ -262,6 +264,7 @@ namespace CMM
                 }
             }
         }
+
         //exp表达式转化成具体数值
         public static string expToValue(ParseTreeNode node)
         {
@@ -270,6 +273,8 @@ namespace CMM
             scriptControl.Language = "JScript";
             return scriptControl.Eval(nodeToString(node)).ToString();
         }
+
+
         private static string nodeToString(ParseTreeNode node)
         {
             String str = "";

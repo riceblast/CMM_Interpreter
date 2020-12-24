@@ -78,6 +78,12 @@ namespace CMM
                 token = inputStack.Peek();
                 symbolNode = symbolStack.Peek();
 
+                // 遇到注释则跳过
+                if(symbolNode.TSymbol == TerminalType.NOTES)
+                {
+                    continue;
+                }
+
                 #region 特殊非终结符号处理
                 // 遇到标识符特殊考虑
                 List<ErrorInfo> variableErrorInfos, expErrorInfos;
@@ -335,8 +341,6 @@ namespace CMM
                 #endregion
             }
             #endregion
-
-
             return isSuccess;
         }
 

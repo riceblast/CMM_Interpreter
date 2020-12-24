@@ -57,6 +57,7 @@
     </ApplicationDefinition>
     <Compile Include="Constant.cs" />
     <Compile Include="ErrorInfo.cs" />
+    <Compile Include="Interpreter.cs" />
     <Compile Include="NEnum.cs" />
     <Compile Include="ParseTree.cs" />
     <Compile Include="ParsingTable.cs" />
