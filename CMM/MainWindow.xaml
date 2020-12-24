@@ -3,47 +3,136 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:CMM"
+        xmlns:local="clr-namespace:CMM" xmlns:smtx="clr-namespace:ShowMeTheXAML;assembly=ShowMeTheXAML" 
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <DockPanel Name="DP1">
-            <Menu DockPanel.Dock="Top">
-                <MenuItem Header="文件">
-                    <MenuItem Header="新建" Click="MenuItem_File_News"></MenuItem>
-                    <MenuItem Header="打开" Click="MenuItem_File_Open"></MenuItem>
-                    <MenuItem Header="保存" Click="MenuItem_File_save"></MenuItem>
-                    <MenuItem Header="另存为" Click="MenuItem_File_saveAs"></MenuItem>
-                    <MenuItem Header ="退出" Click="MenuItem_File_Exsit"></MenuItem>
-                </MenuItem>
-                <MenuItem Header="编辑">
-                    <MenuItem Header="复制"></MenuItem>
-                    <MenuItem Header="粘贴"></MenuItem>
-                    <MenuItem Header="剪切"></MenuItem>
-                    <MenuItem Header="替换"></MenuItem>
-                    <MenuItem Header="查找"></MenuItem>
-                </MenuItem>
-                <MenuItem Header="格式">
-                    <MenuItem Header="自动换行"></MenuItem>
-                </MenuItem>
-                <MenuItem Header="启动">
-                    <MenuItem Header="run" Click="Run"></MenuItem>
-                    <MenuItem Header="debug"></MenuItem>
-                </MenuItem>
-                <MenuItem Header="帮助">
-                    <MenuItem Header="开发者信息"></MenuItem>
-                </MenuItem>
-            </Menu>
-            <TextBox x:Name="input" Width="500"
+        Title="CMM" Height="631.52" Width="809.667"
+        WindowStyle="SingleBorderWindow"
+        Background="AliceBlue"
+        >
+
+    
+    <Grid Margin="0,0,0,0">
+
+        <DockPanel Name="DP1" Margin="0,0,0,180">
+            <smtx:XamlDisplay Name="menus_1" DockPanel.Dock="Top" BorderThickness="1" Margin="0,0,0,0"
+               HorizontalAlignment="Left" Height="24" Width="199">
+                <Menu DockPanel.Dock="Top" BorderBrush="Black" Background="White" Margin="0,0,0,0" Width="251" Height="24" VerticalAlignment="Bottom">
+                    <MenuItem Header="文件" >
+                        <MenuItem Header="新建" Click="MenuItem_File_News"></MenuItem>
+                        <MenuItem Header="打开" Click="MenuItem_File_Open"></MenuItem>
+                        <MenuItem Header="保存" Click="MenuItem_File_save"></MenuItem>
+                        <MenuItem Header="另存为" Click="MenuItem_File_saveAs"></MenuItem>
+                        <MenuItem Header ="退出" Click="MenuItem_File_Exsit"></MenuItem>
+                    </MenuItem>
+                    <MenuItem Header="编辑">
+                        <MenuItem Header="复制"></MenuItem>
+                        <MenuItem Header="粘贴"></MenuItem>
+                        <MenuItem Header="剪切"></MenuItem>
+                        <MenuItem Header="替换"></MenuItem>
+                        <MenuItem Header="查找"></MenuItem>
+                    </MenuItem>
+                    <MenuItem Header="格式">
+                        <MenuItem Header="自动换行"></MenuItem>
+                    </MenuItem>
+                    <MenuItem Header="启动">
+                        <MenuItem Header="run" Click="Run"></MenuItem>
+                        <MenuItem Header="debug"></MenuItem>
+                    </MenuItem>
+                    <MenuItem Header="帮助" >
+                        <MenuItem Header="开发者信息"></MenuItem>
+                    </MenuItem>
+                </Menu>
+            </smtx:XamlDisplay>
+            <smtx:XamlDisplay Name="menus_2" DockPanel.Dock="Top" Margin="5,5,1,5" BorderThickness="1"
+              HorizontalAlignment="Left"  >
+                <ToolBarTray Margin="0,0,0,0"  Width="800" Height="29">
+                    <ToolBar Style="{DynamicResource MaterialDesignToolBar}" ClipToBounds="False">
+                        <Button ToolTip="Save">
+                            <materialDesign:PackIcon Kind="ContentSave" />
+                        </Button>
+                        <Separator />
+                        <Button Command="Cut" ToolTip="Cut" ToolBar.OverflowMode="AsNeeded">
+                            <materialDesign:PackIcon Kind="ContentCut" />
+                        </Button>
+                        <Button Command="Copy" ToolTip="Copy that stuff" ToolBar.OverflowMode="AsNeeded">
+                            <materialDesign:PackIcon Kind="ContentCopy" />
+                        </Button>
+                        <Separator />
+                        <Button Command="Paste" ToolTip="Paste some stuff" ToolBar.OverflowMode="AsNeeded">
+                            <materialDesign:PackIcon Kind="ContentPaste" />
+                        </Button>
+                        <Button ToolTip="词法分析" >
+                            <materialDesign:PackIcon Kind="ScriptText"/>
+                        </Button>
+                        <Button ToolTip="语法分析" >
+                            <materialDesign:PackIcon Kind="VectorPolygon"/>
+                        </Button>
+                        <Button ToolTip="运行"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <materialDesign:PackIcon Kind="Play" />
+                        </Button>
+                        <Separator/>
+                        <Separator/>
+                        <Button ToolTip="debug"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <materialDesign:PackIcon Kind="Bug" />
+                        </Button>
+                        <Button ToolTip="下一步"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <materialDesign:PackIcon Kind="StepForward" />
+                        </Button>
+
+                        <Button ToolTip="结束"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <materialDesign:PackIcon Kind="Stop" />
+                        </Button>
+                        <Button ToolTip="重新开始"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <materialDesign:PackIcon Kind="Restart" />
+                        </Button>
+                    </ToolBar>
+                </ToolBarTray>
+            </smtx:XamlDisplay>
+            <smtx:XamlDisplay Name="text1" Margin="5,0,0,0"  DockPanel.Dock="Left" Width="600" Height="350" HorizontalAlignment="Left">
+                <avalonEdit:TextEditor
+            xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+            Name="input"
+            SyntaxHighlighting="C++"
+            FontFamily="Consolas"
+            FontSize="10pt" 
+            LineNumbersForeground="Black" 
+            Background="#FFF2EEC7"
+            VerticalScrollBarVisibility="Visible" 
+            HorizontalScrollBarVisibility="Auto" 
+            ShowLineNumbers="True" Margin="0,0,0,0" Width="600" Height="350">
+                    <avalonEdit:TextEditor.Options>
+                        <avalonEdit:TextEditorOptions ShowSpaces="True" WordWrapIndentation="4" InheritWordWrapIndentation="true" >
+                            <avalonEdit:TextEditorOptions.ColumnRulerPosition>
+                                <system:Int32>10</system:Int32>
+                            </avalonEdit:TextEditorOptions.ColumnRulerPosition>
+                        </avalonEdit:TextEditorOptions>
+                    </avalonEdit:TextEditor.Options>
+            
+                </avalonEdit:TextEditor>
+            </smtx:XamlDisplay>
+
+            <smtx:XamlDisplay Margin="5,0,0,0" Width="200" Height="350" DockPanel.Dock="Right" HorizontalAlignment="Left">
+                <TextBox x:Name="output"
+                     DockPanel.Dock="Right"
+                         materialDesign:HintAssist.Hint="输出窗口"
                          VerticalScrollBarVisibility="Auto"
                          ScrollViewer.VerticalScrollBarVisibility="Visible"
                          TextWrapping="Wrap"
-                         AcceptsReturn="True"/>
-            <TextBox x:Name="output"
-                         VerticalScrollBarVisibility="Auto"
-                         ScrollViewer.VerticalScrollBarVisibility="Visible"
-                         TextWrapping="Wrap"
-                         AcceptsReturn="True"/>
+                         AcceptsReturn="True"
+                     Background="DarkKhaki" Margin="0,0,0,0" Width="200" Height="350" />
+
+            </smtx:XamlDisplay>
         </DockPanel>
+
+        <smtx:XamlDisplay Height="170" Margin="5,0,5.333,5" VerticalAlignment="Bottom">
+            <TextBox x:Name="debugBox" VerticalContentAlignment="Top" HorizontalContentAlignment="Left" materialDesign:ScrollBarAssist.ButtonsVisibility="Visible" AcceptsReturn="True" AcceptsTab="True"
+                     materialDesign:HintAssist.Hint="调试窗口" Background="AntiqueWhite" 
+                         VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Height="161" Width="800"/>
+        </smtx:XamlDisplay>
+
+
     </Grid>
+
 </Window>
