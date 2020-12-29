@@ -238,16 +238,23 @@ namespace CMM
             }
         }
 
-        //输出，语义分析使用
+        /// <summary>
+        /// 语义分析时输出字符
+        /// </summary>
+        /// <param name="s">输出</param>
         private void outputAppendText(string s) {
             Dispatcher.Invoke(new Action(() => output.Text += s));
         }
-        //清空，语义分析使用
+        /// <summary>
+        /// 语义分析时清空输出
+        /// </summary>
         private void outputCleanText()
         {
             Dispatcher.Invoke(new Action(() => output.Text = ""));
         }
-        //调用这个方法唤醒线程，即在断点代码部分继续执行
+        /// <summary>
+        /// 调用这个方法唤醒线程，即在断点代码部分继续执行
+        /// </summary>
         private void wake() {
             Constant.mreSet();
         }

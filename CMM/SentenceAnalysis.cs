@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -11,9 +12,14 @@ namespace CMM
 {
     class SentenceAnalysis
     {
-        //是否继续运行
+        /// <summary>
+        /// 是否继续运行
+        /// </summary>
         public static bool if_continue = true;
-        //入口函数,传入根节点
+        /// <summary>
+        ///入口函数
+        /// </summary>
+        /// <param name="treeNode">根节点</param>
         public static void nodeAnalysis(ParseTreeNode treeNode)
         {
             foreach (ParseTreeNode node in treeNode.Childs)
@@ -44,10 +50,15 @@ namespace CMM
             }
         }
 
+        /// <summary>
+        ///Statement节点分析函数
+        /// </summary>
+        /// <param name="node">Statement节点</param>
         public static void StatementAnalysis(ParseTreeNode node)
         {
             //判断是不是断点
-            if (false) {
+            if (false)
+            {
                 //如果是断点则阻塞线程
                 Constant.mreReset();
             }
@@ -73,7 +84,8 @@ namespace CMM
                     ParseTreeNode stmtBlock = ifStmtBlock.Childs[4];
                     //stmt - block->{statement} | { stmt - sequence }   // 语句块
 
-                    if (stmtBlock.Childs[1].NSymbol == NEnum.statement) {
+                    if (stmtBlock.Childs[1].NSymbol == NEnum.statement)
+                    {
                         Constant.currentScopeIncrease();
                         StatementAnalysis(stmtBlock.Childs[1]);
                         Constant.currentScopeDecrease();
@@ -136,7 +148,8 @@ namespace CMM
                     ParseTreeNode stmtBlock = whileStmt.Childs[4];
                     //stmt - block->{statement} | { stmt - sequence }   // 语句块
 
-                    if (stmtBlock.Childs[1].NSymbol == NEnum.statement) {
+                    if (stmtBlock.Childs[1].NSymbol == NEnum.statement)
+                    {
                         Constant.currentScopeIncrease();
                         StatementAnalysis(stmtBlock.Childs[1]);
                         Constant.currentScopeDecrease();
@@ -169,8 +182,28 @@ namespace CMM
                     string name = variable.Childs[0].StringValue;
                     //查找并赋值
                     ScopeTable scopeTable = Constant.check(name);
-                    scopeTable.value = expToValue(assignStmt.Childs[2]);
-                    Constant.update(scopeTable);
+
+                    if (IsNumberic(expToValue(assignStmt.Childs[2])))
+                    {
+                        //声明的为整数时，还需将非整数转化成整数
+                        if (scopeTable.type == "int")
+                        {
+                            string value = int.Parse(expToValue(assignStmt.Childs[2])).ToString();
+                            scopeTable.value = value;
+                            Constant.update(scopeTable);
+                        }
+                        else //real类型可以直接存入
+                        {
+                            scopeTable.value = expToValue(assignStmt.Childs[2]);
+                            Constant.update(scopeTable);
+                        }
+                    }
+                    else
+                    //返回错误
+                    {
+                        ErrorInfo error = new ErrorInfo(0, "赋值类型错误！");
+                    }
+
                 }
                 else
                 //数组赋值   没有考虑一维数组以外的情况
@@ -186,15 +219,41 @@ namespace CMM
                     string type = scopeTable.type;
                     int length = int.Parse(type.Substring(type.IndexOf('[') + 1, type.IndexOf('[') - type.IndexOf(']')));
                     if (leng > length)
+                    {
+                        ErrorInfo error = new ErrorInfo(0, "数组越界错误！");
                         MessageBox.Show("数组越界");
+                    }
+
                     else
                     {
                         //value= 0,0,0
                         string value = scopeTable.value;
                         string[] arr1 = value.Split(','); // 以','字符对字符串进行分割，返回字符串数组
-                        arr1[leng] = expToValue(assignStmt.Childs[2]);
-                        scopeTable.value = String.Join(",", arr1);
-                        Constant.update(scopeTable);
+
+                        if (IsNumberic(expToValue(assignStmt.Childs[2])))
+                        {
+                            //声明的为整数时，还需将非整数转化成整数
+                            if (scopeTable.type.IndexOf("int") != -1)
+                            {
+                                string value = int.Parse(expToValue(assignStmt.Childs[2])).ToString();
+                                arr1[leng] = value;
+                                scopeTable.value = String.Join(",", arr1);
+                                Constant.update(scopeTable);
+                            }
+                            else //real类型可以直接存入
+                            {
+                                arr1[leng] = expToValue(assignStmt.Childs[2]);
+                                scopeTable.value = String.Join(",", arr1);
+                                Constant.update(scopeTable);
+                            }
+                        }
+                        else
+                        //返回错误
+                        {
+                            ErrorInfo error = new ErrorInfo(0, "赋值类型错误！");
+                            MessageBox.Show("赋值类型错误");
+                        }
+
                     }
 
                 }
@@ -209,7 +268,8 @@ namespace CMM
             //write-stmt -> write exp ;   // write语句
             {
                 ParseTreeNode writeStmt = node.Childs[0];
-                Console.WriteLine(expToValue(writeStmt.Childs[1]));
+                ParseTreeNode exp = writeStmt.Childs[1];
+                Constant.outputAppend(expToValue(exp));
             }
             else if (node.Childs[0].NSymbol == NEnum.declare_stmt)
             //declare-stmt语句 (int | real) ( (identifier [= exp ]) | (identifier [ exp ]) ) ;
@@ -241,11 +301,36 @@ namespace CMM
                 //声明，且赋值  int a=3;
 
                 {
-                    ScopeTable scopeTable = new ScopeTable(declareStmt.Childs[1].StringValue, declareStmt.Childs[0].StringValue, expToValue(declareStmt.Childs[3]), Constant.currentScope);
-                    Constant.scopeTables.Add(scopeTable);
+                    if (IsNumberic(expToValue(declareStmt.Childs[3])))
+                    {
+                        //声明的为整数时，还需将非整数转化成整数
+                        if (declareStmt.Childs[0].StringValue == "int")
+                        {
+                            string value = int.Parse(expToValue(declareStmt.Childs[3])).ToString();
+                            ScopeTable scopeTable = new ScopeTable(declareStmt.Childs[1].StringValue, declareStmt.Childs[0].StringValue, value, Constant.currentScope);
+                            Constant.scopeTables.Add(scopeTable);
+                        }
+                        else //real类型可以直接存入
+                        {
+                            ScopeTable scopeTable = new ScopeTable(declareStmt.Childs[1].StringValue, declareStmt.Childs[0].StringValue, expToValue(declareStmt.Childs[3]), Constant.currentScope);
+                            Constant.scopeTables.Add(scopeTable);
+                        }
+
+
+                    }
+                    else
+                    //返回错误
+                    {
+                        ErrorInfo error = new ErrorInfo(0, "声明类型错误！");
+                    }
                 }
             }
         }
+        /// <summary>
+        /// exp真假判断函数
+        /// </summary>
+        /// <param name="node">exp节点</param>
+        /// <returns>exp节点是否为真，真返回true，假返回false</returns>
         public static bool expJudge(ParseTreeNode node)
         {
             string result = expToValue(node);
@@ -272,7 +357,11 @@ namespace CMM
                 }
             }
         }
-        //exp表达式转化成具体数值
+        /// <summary>
+        /// 字符串计算
+        /// </summary>
+        /// <param name="node">待计算节点</param>
+        /// <returns>返回该节点之下的所有叶子节点组成的字符串的计算结果</returns>
         public static string expToValue(ParseTreeNode node)
         {
             MSScriptControl.ScriptControl scriptControl = new MSScriptControl.ScriptControl();
@@ -280,11 +369,18 @@ namespace CMM
             scriptControl.Language = "JScript";
             return scriptControl.Eval(nodeToString(node)).ToString();
         }
+        /// <summary>
+        /// 节点转字符串
+        /// </summary>
+        /// <param name="node">待转化节点</param>
+        /// <returns>返回该节点之下的所有叶子节点组成的字符串</returns>
         private static string nodeToString(ParseTreeNode node)
         {
             String str = "";
-            if (node.IsLeaf) {
-                if (node.TSymbol == TerminalType.ID) {
+            if (node.IsLeaf)
+            {
+                if (node.TSymbol == TerminalType.ID)
+                {
                     return Constant.check(node.StringValue).value;
                 }
                 return node.StringValue;
@@ -298,6 +394,10 @@ namespace CMM
                 }
             }
             return str;
+        }
+        public static bool IsNumberic(string value)
+        {
+            return Regex.IsMatch(value, @"^[+-]?/d*[.]?/d*$");
         }
     }
 }
