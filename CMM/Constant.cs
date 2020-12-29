@@ -3,14 +3,41 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CMM
 {
     class Constant
     {
+        private static string output="";
         public static int currentScope=0;
         public static List<ScopeTable> scopeTables=new List<ScopeTable>();
+        public static event Action<string> outPutAppend;
+        public static event Action outPutClean;
+        //控制语义分析的运行
+        public static ManualResetEvent _mre = new ManualResetEvent(true);
+
+        //唤醒线程
+        public static void mreSet() {
+            _mre.Set();
+        }
+        //停止线程
+        public static void mreReset()
+        {
+            _mre.Reset();
+        }
+
+        public static void outputAppend(string s) {
+            output += s;
+            outPutAppend(s);
+        }
+        public static void outputClean()
+        {
+            output ="";
+            outPutClean();
+        }
+
         public static void currentScopeDecrease()
         {
             currentScope -= 1;

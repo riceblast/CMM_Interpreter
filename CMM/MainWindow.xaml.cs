@@ -100,7 +100,12 @@ namespace CMM
             InitializeComponent();
             breakPoints = new Dictionary<int, Point>();
             input.TextArea.LeftMargins.Insert(0, new BreakPointMargin());
-            
+
+            //输出结果
+            Constant.outPutAppend += outputAppendText;
+            //清空结果
+            Constant.outPutClean += outputCleanText;
+
         }
 
         private void MenuItem_File_News(object sender, RoutedEventArgs e)
@@ -231,6 +236,20 @@ namespace CMM
             {
                 output.Text += $"<{item.Name},{item.Id},{item.Row},{item.Num}>\n";
             }
+        }
+
+        //输出，语义分析使用
+        private void outputAppendText(string s) {
+            Dispatcher.Invoke(new Action(() => output.Text += s));
+        }
+        //清空，语义分析使用
+        private void outputCleanText()
+        {
+            Dispatcher.Invoke(new Action(() => output.Text = ""));
+        }
+        //调用这个方法唤醒线程，即在断点代码部分继续执行
+        private void wake() {
+            Constant.mreSet();
         }
     }
 }

@@ -5,11 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace CMM
 {
     class SentenceAnalysis
     {
+        //是否继续运行
+        public static bool if_continue = true;
         //入口函数,传入根节点
         public static void nodeAnalysis(ParseTreeNode treeNode)
         {
@@ -43,6 +46,13 @@ namespace CMM
 
         public static void StatementAnalysis(ParseTreeNode node)
         {
+            //判断是不是断点
+            if (false) {
+                //如果是断点则阻塞线程
+                Constant.mreReset();
+            }
+            //判断是否能运行
+            Constant._mre.WaitOne();
             if (node.IsLeaf)
                 //是叶子节点直接退出
                 return;
@@ -68,7 +78,7 @@ namespace CMM
                         StatementAnalysis(stmtBlock.Childs[1]);
                         Constant.currentScopeDecrease();
                     }
-                        
+
                     else if (!stmtBlock.Childs[1].IsLeaf)
                     {
                         Constant.currentScopeIncrease();
@@ -87,7 +97,7 @@ namespace CMM
                 else if (ifStmt.Childs.Count == 2)
                 //else-stmt-block -> else stmt-block | ε
                 {
-                    if (ifStmt.Childs[1].Childs[0].TSymbol==TerminalType.EMPTY)
+                    if (ifStmt.Childs[1].Childs[0].TSymbol == TerminalType.EMPTY)
                         //是空直接退出
                         return;
                     //遇到stmtBlock
@@ -274,12 +284,12 @@ namespace CMM
         {
             String str = "";
             if (node.IsLeaf) {
-                if (node.TSymbol==TerminalType.ID) {
+                if (node.TSymbol == TerminalType.ID) {
                     return Constant.check(node.StringValue).value;
                 }
                 return node.StringValue;
             }
-                
+
             else
             {
                 for (int i = 0; i < node.Childs.Count; i++)
@@ -289,7 +299,5 @@ namespace CMM
             }
             return str;
         }
-
-
     }
 }
