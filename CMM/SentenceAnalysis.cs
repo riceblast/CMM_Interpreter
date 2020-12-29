@@ -231,7 +231,7 @@ namespace CMM
                 //声明，且赋值  int a=3;
 
                 {
-                    ScopeTable scopeTable = new ScopeTable(declareStmt.Childs[1].StringValue, declareStmt.Childs[0].StringValue, declareStmt.Childs[3].StringValue, Constant.currentScope);
+                    ScopeTable scopeTable = new ScopeTable(declareStmt.Childs[1].StringValue, declareStmt.Childs[0].StringValue, expToValue(declareStmt.Childs[3]), Constant.currentScope);
                     Constant.scopeTables.Add(scopeTable);
                 }
             }

@@ -11,13 +11,22 @@ namespace CMM
     {
         public static int currentScope=0;
         public static List<ScopeTable> scopeTables=new List<ScopeTable>();
-        public static void currentScopeDecrease() {
+        public static void currentScopeDecrease()
+        {
             currentScope -= 1;
-            foreach(ScopeTable table in scopeTables){
-                if (table.scope == currentScope + 1) {
-                    scopeTables.Remove(table);
+            List<ScopeTable> tables = new List<ScopeTable>();
+            foreach (ScopeTable table in scopeTables)
+            {
+                if (table.scope == currentScope + 1)
+                {
+                    tables.Add(table);
                 }
             }
+            foreach (ScopeTable table in tables)
+            {
+                scopeTables.Remove(table);
+            }
+
         }
         public static void currentScopeIncrease()
         {
@@ -38,7 +47,6 @@ namespace CMM
                     {
                         Constant.scopeTables[i].type = scopeTable.type;
                         Constant.scopeTables[i].value = scopeTable.value;
-                        Constant.scopeTables[i].scope = scopeTable.scope;
                     }
                 }
             }
