@@ -235,8 +235,8 @@ namespace CMM
                             //声明的为整数时，还需将非整数转化成整数
                             if (scopeTable.type.IndexOf("int") != -1)
                             {
-                                string value = int.Parse(expToValue(assignStmt.Childs[2])).ToString();
-                                arr1[leng] = value;
+                                string value2 = int.Parse(expToValue(assignStmt.Childs[2])).ToString();
+                                arr1[leng] = value2;
                                 scopeTable.value = String.Join(",", arr1);
                                 Constant.update(scopeTable);
                             }
