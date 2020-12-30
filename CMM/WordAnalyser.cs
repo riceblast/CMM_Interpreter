@@ -321,6 +321,35 @@ namespace CMM
             return result;
         }
 
+        /// <summary>
+        /// 当前用户输入的所有变量
+        /// </summary>
+        /// <param name="inputStr"></param>
+        /// <returns></returns>
+        public static List<string> GetAllVariables(string inputStr)
+        {
+            // 用于接收结果的string
+            List<string> variables = new List<string>();
+
+            TokenResult result = Analyse(inputStr);
+            List<Token> tokens = result.Tokens;
+            tokens.RemoveAt(tokens.Count - 1);
+            if(tokens.Count > 0)
+            {
+                tokens.RemoveAt(tokens.Count - 1);
+            }
+
+            for(int i = 0; i < tokens.Count; i++)
+            {
+                if(tokens[i].TokenType == TerminalType.ID)
+                {
+                    variables.Add(tokens[i].StrValue);
+                }
+            }
+
+            return variables;
+        }
+
     }
 
 }

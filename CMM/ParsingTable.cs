@@ -56,7 +56,7 @@ namespace CMM
             // program -> stmt-sequence
             SetParsingTable(NEnum.program, new List<ParseTreeNode>()
             {
-                new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.program)
+                new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.stmt_sequence)
             }, TerminalType.IF, TerminalType.WHILE, TerminalType.READ, TerminalType.WRITE,
             TerminalType.INT, TerminalType.REAL, TerminalType.ID, TerminalType.END);
 
@@ -94,7 +94,7 @@ namespace CMM
             SetParsingTable(NEnum.statement, NEnum.assign_stmt, TerminalType.ID);
 
             // stmt-block -> {stmt-sequence}
-            SetParsingTable(NEnum.statement, new List<ParseTreeNode>()
+            SetParsingTable(NEnum.stmt_block, new List<ParseTreeNode>()
             {
                 new ParseTreeNode(true, TerminalType.LBRACE, NEnum.DEFAULT),
                 new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.stmt_sequence),
@@ -141,40 +141,45 @@ namespace CMM
                 new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.stmt_block)
             }, TerminalType.WHILE);
 
-            // assign-stmt -> variable = exp
+            // assign-stmt -> variable = exp;
             SetParsingTable(NEnum.assign_stmt, new List<ParseTreeNode>()
             {
                 new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.variable),
                 new ParseTreeNode(true, TerminalType.ASSIGN, NEnum.DEFAULT),
-                new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.exp)
+                new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.exp),
+                new ParseTreeNode(true, TerminalType.SEMI, NEnum.DEFAULT)
             }, TerminalType.ID);
 
             // read-stmt -> read variable;
             SetParsingTable(NEnum.read_stmt, new List<ParseTreeNode>()
             {
-                new ParseTreeNode(true, TerminalType.READ, NEnum.variable),
-                new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.variable)
+                new ParseTreeNode(true, TerminalType.READ, NEnum.DEFAULT),
+                new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.variable),
+                new ParseTreeNode(true, TerminalType.SEMI, NEnum.DEFAULT)
             }, TerminalType.READ);
 
-            // write-stmt -> write exp
+            // write-stmt -> write exp;
             SetParsingTable(NEnum.write_stmt, new List<ParseTreeNode>()
             {
                 new ParseTreeNode(true, TerminalType.WRITE, NEnum.DEFAULT),
-                new ParseTreeNode(true, TerminalType.DEFAULT, NEnum.exp)
+                new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.exp),
+                new ParseTreeNode(true, TerminalType.SEMI, NEnum.DEFAULT)
             }, TerminalType.WRITE);
 
-            // declare-stmt -> int variable
+            // declare-stmt -> int variable;
             SetParsingTable(NEnum.declare_stmt, new List<ParseTreeNode>()
             {
-                new ParseTreeNode(true, TerminalType.INT, NEnum.variable),
-                new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.variable)
+                new ParseTreeNode(true, TerminalType.INT, NEnum.DEFAULT),
+                new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.variable),
+                new ParseTreeNode(true, TerminalType.SEMI, NEnum.DEFAULT)
             }, TerminalType.INT);
 
-            // declare-stmt -> real variable
+            // declare-stmt -> real variable;
             SetParsingTable(NEnum.declare_stmt, new List<ParseTreeNode>()
             {
                 new ParseTreeNode(true, TerminalType.REAL, NEnum.DEFAULT),
-                new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.variable)
+                new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.variable),
+                new ParseTreeNode(true, TerminalType.SEMI, NEnum.DEFAULT)
             }, TerminalType.REAL);
 
             // variable-stmt -> DEFAULT
