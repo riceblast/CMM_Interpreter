@@ -11,6 +11,7 @@ real d=1.0;
 real e=1.5;
 
 /*表达式*/
+float d;
 c=a+b;
 write(c);//output:3
 c=b-a;

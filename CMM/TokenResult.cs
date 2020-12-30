@@ -26,6 +26,9 @@ namespace CMM
         /// </summary>
         public List<ErrorInfo> ErrorInfos { get; set; }
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
         public TokenResult()
         {
             Tokens = new List<Token>();

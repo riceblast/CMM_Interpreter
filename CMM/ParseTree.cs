@@ -65,6 +65,11 @@ namespace CMM
         public string StringValue { get; set; }
 
         /// <summary>
+        /// 记录叶子节点对应的token的行号
+        /// </summary>
+        public int LineNum { get; set; }
+
+        /// <summary>
         /// 该结点的所有孩子结点
         /// </summary>
         public List<ParseTreeNode> Childs { get; set; }
