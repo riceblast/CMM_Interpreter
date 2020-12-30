@@ -69,12 +69,12 @@
                         <Button ToolTip="语法分析" >
                             <materialDesign:PackIcon Kind="VectorPolygon"/>
                         </Button>
-                        <Button ToolTip="运行"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                        <Button Name ="runBtn" ToolTip="运行"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Click="Run_Click">
                             <materialDesign:PackIcon Kind="Play" />
                         </Button>
                         <Separator/>
                         <Separator/>
-                        <Button ToolTip="debug"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                        <Button ToolTip="debugBtn"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
                             <materialDesign:PackIcon Kind="Bug" />
                         </Button>
                         <Button ToolTip="下一步"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">

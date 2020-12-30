@@ -432,5 +432,15 @@ namespace CMM
         private void wake() {
             Constant.mreSet();
         }
+
+        /// <summary>
+        /// 运行用户代码，调用后端编译器进行词法、语法、语义分析
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Run_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
