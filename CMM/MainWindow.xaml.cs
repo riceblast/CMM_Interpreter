@@ -45,6 +45,8 @@ namespace CMM
             input.TextArea.LeftMargins.Insert(0, new BreakPointMargin());
             input.TextArea.TextEntering += textEditor_TextArea_TextEntering;
             input.TextArea.TextEntered += textEditor_TextArea_TextEntered;
+
+            interpreter = new Interpreter("");
         }
 
         //自动补全的内容类
