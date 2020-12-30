@@ -1,4 +1,6 @@
 ﻿using CMM.table;
+using ICSharpCode.AvalonEdit.CodeCompletion;
+using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Editing;
 using ICSharpCode.AvalonEdit.Rendering;
 using Microsoft.Win32;
@@ -32,11 +34,60 @@ namespace CMM
         private bool isSave = false;
         private string inputstr="";
         private static Dictionary<int, Point> breakPoints;
+        private List<String> variableList;
 
+        public MainWindow()
+        {
+            InitializeComponent();
+            variableList = new List<string>();
+            breakPoints = new Dictionary<int, Point>();
+            input.TextArea.LeftMargins.Insert(0, new BreakPointMargin());
+            input.TextArea.TextEntering += textEditor_TextArea_TextEntering;
+            input.TextArea.TextEntered += textEditor_TextArea_TextEntered;
+        }
+
+        //自动补全的内容类
+        private class MyCompletionData : ICompletionData
+        {
+            public MyCompletionData(string text)
+            {
+                this.Text = text;
+            }
+
+            public System.Windows.Media.ImageSource Image
+            {
+                get { return null; }
+            }
+
+            public string Text { get; private set; }
+
+            // Use this property if you want to show a fancy UIElement in the list.
+            public object Content
+            {
+                get { return this.Text; }
+            }
+
+            public object Description
+            {
+                get { return "Description for " + this.Text; }
+            }
+
+            public double Priority => throw new NotImplementedException();
+
+            public void Complete(TextArea textArea, ISegment completionSegment,
+                EventArgs insertionRequestEventArgs)
+            {
+                textArea.Document.Replace(completionSegment.Offset - 1, 
+                    completionSegment.EndOffset, 
+                    new StringTextSource(this.Text),
+                    null);
+            }
+        }
+
+        //断点的边缘
         private class BreakPointMargin : AbstractMargin
         {
             private const int margin = 10;
-            private TextArea textArea;
 
             protected override HitTestResult HitTestCore(PointHitTestParameters hitTestParameters)
             {
@@ -95,12 +146,109 @@ namespace CMM
             set { filePath = value; }
         }
 
-        public MainWindow()
+
+
+        CompletionWindow completionWindow;
+
+        /**
+         * 用于自动补全
+         * 
+         */
+        void textEditor_TextArea_TextEntered(object sender, TextCompositionEventArgs e)
         {
-            InitializeComponent();
-            breakPoints = new Dictionary<int, Point>();
-            input.TextArea.LeftMargins.Insert(0, new BreakPointMargin());
-            
+            completionWindow = new CompletionWindow(input.TextArea);
+            IList<ICompletionData> data = completionWindow.CompletionList.CompletionData;
+            //if (e.Text == ".")
+            //{
+            //    // Open code completion after the user has pressed dot:
+            //    data.Add(new MyCompletionData("自动补全"));
+            //    completionWindow.Show();
+            //    completionWindow.Closed += delegate {
+            //        completionWindow = null;
+            //    };
+            //}
+            //if (e.Text == "i")
+            //{
+            //    data.Add(new MyCompletionData("int"));
+            //    data.Add(new MyCompletionData("if"));
+            //    completionWindow.Show();
+            //    completionWindow.Closed += delegate {
+            //        completionWindow = null;
+            //    };
+            //}
+            switch (e.Text)
+            {
+                case ".":
+                    {
+                        data.Add(new MyCompletionData("自动补全"));
+                        completionWindow.Show();
+                        completionWindow.Closed += delegate {
+                            completionWindow = null;
+                        };
+                        break;
+                    }
+                case "i":
+                    {
+                        data.Add(new MyCompletionData("int"));
+                        data.Add(new MyCompletionData("if"));
+                        completionWindow.Show();
+                        completionWindow.Closed += delegate {
+                            completionWindow = null;
+                        };
+                        break;
+                    }
+                case "r":
+                    {
+                        data.Add(new MyCompletionData("real"));
+                        data.Add(new MyCompletionData("read"));
+                        completionWindow.Show();
+                        completionWindow.Closed += delegate {
+                            completionWindow = null;
+                        };
+                        break;
+                    }
+                case "w":
+                    {
+                        data.Add(new MyCompletionData("write"));
+                        data.Add(new MyCompletionData("while"));
+                        completionWindow.Show();
+                        completionWindow.Closed += delegate {
+                            completionWindow = null;
+                        };
+                        break;
+                    }
+                case "e":
+                    {
+                        data.Add(new MyCompletionData("else"));
+                        completionWindow.Show();
+                        completionWindow.Closed += delegate {
+                            completionWindow = null;
+                        };
+                        break;
+
+                    }
+                default:
+                    break;
+            }
+        }
+
+        /**
+         * 用于自动补全
+         * 
+         */
+        void textEditor_TextArea_TextEntering(object sender, TextCompositionEventArgs e)
+        {
+            if (e.Text.Length > 0 && completionWindow != null)
+            {
+                //if (!char.IsLetterOrDigit(e.Text[0]))
+                //{
+                //    // Whenever a non-letter is typed while the completion window is open,
+                //    // insert the currently selected element.
+                //}
+                    completionWindow.CompletionList.RequestInsertion(e);
+            }
+            // Do not set e.Handled=true.
+            // We still want to insert the character that was typed.
         }
 
         private void MenuItem_File_News(object sender, RoutedEventArgs e)
@@ -109,6 +257,8 @@ namespace CMM
             IsSave = false;
             inputstr = "";
         }
+
+
 
         private void MenuItem_File_Open(object sender, RoutedEventArgs e)
         {
