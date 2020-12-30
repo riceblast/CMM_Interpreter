@@ -40,10 +40,12 @@ namespace CMM
         /// 调用语法分析程序
         /// </summary>
         /// <param name="tokenResult">词法分析结果</param>
+        /// <param name="bpList">breakPoint列表，断点所在行数</param>
         /// <returns>语法分析树</returns>
-        public ParseTree SyntacticAnalyse(TokenResult tokenResult)
+        public ParseTree SyntacticAnalyse(TokenResult tokenResult, List<int> bpList)
         {
-            return this.syntacticAnalyser.SyntacticAnalysis(tokenResult);
+            return this.syntacticAnalyser.SyntacticAnalysis(tokenResult,
+                bpList);
         }
 
         /// <summary>
@@ -51,21 +53,15 @@ namespace CMM
         /// 包括调用词法、语法、语义分析
         /// 以及出错处理程序
         /// </summary>
-        public void Run()
+        /// <param name="bpList">breakPoint列表，所有断点所在行数</param>
+        public void Run(List<int> bpList)
         {
             TokenResult tokenResult = WordAnalyse();
 
-            // TODO 词法分析出错处理程序待做
+            // TODO 词法.语法分析出错处理程序待做
 
-            ParseTree parseTree = SyntacticAnalyse(tokenResult);
+            ParseTree parseTree = SyntacticAnalyse(tokenResult, bpList);
 
-            // 测试程序
-            using (StreamWriter sw = new StreamWriter(new FileStream("parseTreeTest.txt", FileMode.Open)))
-            {
-                sw.WriteLine(parseTree.ToString());
-            }
-
-            Console.WriteLine();
         }
     }
 }

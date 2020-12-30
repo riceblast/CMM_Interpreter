@@ -27,6 +27,11 @@ namespace CMM
         public List<ErrorInfo> errorInfos { get; set; }
 
         /// <summary>
+        /// 测试用字符串
+        /// </summary>
+        private string testString;
+
+        /// <summary>
         /// 语法分析树构造函数，初始化根节点
         /// </summary>
         public ParseTree()
@@ -34,6 +39,35 @@ namespace CMM
             Root = new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.program);
             IsSuccess = true;
             errorInfos = new List<ErrorInfo>();
+        }
+
+        /// <summary>
+        /// 重写ToString方法，测试用，输出所有叶子结点strValue和行号
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            iterateTree(Root);
+            return testString;
+        }
+
+        /// <summary>
+        /// 迭代遍历子树
+        /// </summary>
+        /// <param name="node"></param>
+        private void iterateTree(ParseTreeNode node)
+        {
+            if (node.IsLeaf)
+            {
+                testString += node.ToString() + "\n";
+            }
+            else
+            {
+                foreach(ParseTreeNode treeNode in node.Childs)
+                {
+                    iterateTree(treeNode);
+                }
+            }
         }
     }
 
@@ -86,6 +120,25 @@ namespace CMM
             this.TSymbol = tSymbol;
             this.NSymbol = nSymbol;
             this.Childs = new List<ParseTreeNode>();
+        }
+
+        /// <summary>
+        /// 重写ToString，显示叶子结点的strValue和行号
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            string result;
+            if (!IsLeaf)
+            {
+                result = "";
+            }
+            else
+            {
+                result = $"{StringValue} ({LineNum})";
+            }
+
+            return result;
         }
     }
 }

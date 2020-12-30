@@ -26,6 +26,11 @@ namespace CMM
         }
 
         /// <summary>
+        /// breakPoint断点行号列表
+        /// </summary>
+        private List<int> bPLineNums;
+
+        /// <summary>
         /// 记录自顶向下分析过程的符号表，以语法分析树的叶子结点作为标识
         /// </summary>
         private Stack<ParseTreeNode> symbolStack;
@@ -48,10 +53,14 @@ namespace CMM
         /// <summary>
         /// 利用词法分析的结果进行语法分析
         /// </summary>
-        /// <param name="tokens">由词法分析得到的token列表</param>
+        /// <param name="tokenResult">由词法分析得到的token结果</param>
+        /// <param name="bpList">断点行号列表</param>
         /// <returns>语法分析树</returns>
-        public ParseTree SyntacticAnalysis(TokenResult tokenResult)
+        public ParseTree SyntacticAnalysis(TokenResult tokenResult, List<int> bpList)
         {
+            // 初始化断点列表
+            this.bPLineNums = bpList;
+
             // 开始构造语法分析树
             this.targetTree = new ParseTree();
 
@@ -72,8 +81,6 @@ namespace CMM
             symbolStack.Push(EndNode);
 
             // 将program放入符号栈
-            //ParseTreeNode programNode = new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.program);
-            //symbolStack.Push(programNode);
             symbolStack.Push(targetTree.Root);
 
             // 每次从输入栈中读取一个符号并更新符号栈的值
@@ -169,7 +176,24 @@ namespace CMM
 
             // 返回构建好的语法分析树
             this.targetTree.IsSuccess = isSuccess;
+
             return this.targetTree;
+        }
+
+        /// <summary>
+        /// 获取以stmtsequnce为结点的最左边叶子结点的行号
+        /// 如果出错则返回-1
+        /// </summary>
+        /// <param name="treeNode">属性为stmtsequence的结点</param>
+        /// <returns>最左边叶结点的行号</returns>
+        private int GetStmtSeqLine(ParseTreeNode treeNode)
+        {
+            while(treeNode.Childs.Count > 0)
+            {
+                treeNode = treeNode.Childs.First();
+            }
+
+            return treeNode.LineNum;
         }
 
         /// <summary>
@@ -372,6 +396,17 @@ namespace CMM
             else
             {
                 List<ParseTreeNode> production = productions[0].production;
+
+                // 断点处理
+                // 如果对应的token是断点所在行，则加入断点
+                if(symbolNode.NSymbol == NEnum.statement &&
+                    this.bPLineNums.Contains(token.LineNum))
+                {
+                    treeNode = new ParseTreeNode(true, TerminalType.BREAKPOINT,
+                        NEnum.DEFAULT);
+                    symbolNode.Childs.Add(treeNode);
+                } 
+
                 // 生成对应的树结点，并设置子树
                 for (int i = 0; i < production.Count; i++)
                 {

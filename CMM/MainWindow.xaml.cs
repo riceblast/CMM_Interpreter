@@ -32,6 +32,7 @@ namespace CMM
         private bool isSave = false;
         private string inputstr="";
         private static Dictionary<int, Point> breakPoints;
+        private Interpreter interpreter; // 解释器类
 
         private class BreakPointMargin : AbstractMargin
         {
@@ -105,6 +106,9 @@ namespace CMM
             Constant.outPutAppend += outputAppendText;
             //清空结果
             Constant.outPutClean += outputCleanText;
+
+            // 初始化解释器
+            this.interpreter = new Interpreter("");
 
         }
 
@@ -268,7 +272,16 @@ namespace CMM
         /// <param name="e"></param>
         private void Run_Click(object sender, RoutedEventArgs e)
         {
+            // 更新解释器的源代码属性
+            this.interpreter.SourceCode = input.Text;
 
+            // 获取所有断点行号
+            List<int> bpList = new List<int>();
+            foreach (int key in breakPoints.Keys)
+            {
+                bpList.Add(key);
+            }
+            interpreter.Run(bpList);
         }
     }
 }
