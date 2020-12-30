@@ -77,10 +77,11 @@ namespace CMM
             public void Complete(TextArea textArea, ISegment completionSegment,
                 EventArgs insertionRequestEventArgs)
             {
-                textArea.Document.Replace(completionSegment.Offset - 1, 
-                    completionSegment.EndOffset, 
+                textArea.Document.Replace(completionSegment.Offset - 1,
+                    completionSegment.Length+1,
                     new StringTextSource(this.Text),
                     null);
+                //textArea.Document.Replace(completionSegment, this.Text);
             }
         }
 
@@ -156,30 +157,16 @@ namespace CMM
          */
         void textEditor_TextArea_TextEntered(object sender, TextCompositionEventArgs e)
         {
+            variableList = WordAnalyser.GetAllVariables(input.Text);
             completionWindow = new CompletionWindow(input.TextArea);
             IList<ICompletionData> data = completionWindow.CompletionList.CompletionData;
-            //if (e.Text == ".")
-            //{
-            //    // Open code completion after the user has pressed dot:
-            //    data.Add(new MyCompletionData("自动补全"));
-            //    completionWindow.Show();
-            //    completionWindow.Closed += delegate {
-            //        completionWindow = null;
-            //    };
-            //}
-            //if (e.Text == "i")
-            //{
-            //    data.Add(new MyCompletionData("int"));
-            //    data.Add(new MyCompletionData("if"));
-            //    completionWindow.Show();
-            //    completionWindow.Closed += delegate {
-            //        completionWindow = null;
-            //    };
-            //}
+
             switch (e.Text)
             {
                 case ".":
                     {
+
+
                         data.Add(new MyCompletionData("自动补全"));
                         completionWindow.Show();
                         completionWindow.Closed += delegate {
@@ -189,6 +176,13 @@ namespace CMM
                     }
                 case "i":
                     {
+                        var varList = from variables in variableList
+                                      where variables.StartsWith("i")
+                                      select variables;
+                        foreach(String v in varList)
+                        {
+                            data.Add(new MyCompletionData(v));
+                        }
                         data.Add(new MyCompletionData("int"));
                         data.Add(new MyCompletionData("if"));
                         completionWindow.Show();
@@ -199,6 +193,13 @@ namespace CMM
                     }
                 case "r":
                     {
+                        var varList = from variables in variableList
+                                      where variables.StartsWith("r")
+                                      select variables;
+                        foreach (String v in varList)
+                        {
+                            data.Add(new MyCompletionData(v));
+                        }
                         data.Add(new MyCompletionData("real"));
                         data.Add(new MyCompletionData("read"));
                         completionWindow.Show();
@@ -209,6 +210,13 @@ namespace CMM
                     }
                 case "w":
                     {
+                        var varList = from variables in variableList
+                                      where variables.StartsWith("w")
+                                      select variables;
+                        foreach (String v in varList)
+                        {
+                            data.Add(new MyCompletionData(v));
+                        }
                         data.Add(new MyCompletionData("write"));
                         data.Add(new MyCompletionData("while"));
                         completionWindow.Show();
@@ -219,6 +227,13 @@ namespace CMM
                     }
                 case "e":
                     {
+                        var varList = from variables in variableList
+                                      where variables.StartsWith("e")
+                                      select variables;
+                        foreach (String v in varList)
+                        {
+                            data.Add(new MyCompletionData(v));
+                        }
                         data.Add(new MyCompletionData("else"));
                         completionWindow.Show();
                         completionWindow.Closed += delegate {
@@ -227,8 +242,25 @@ namespace CMM
                         break;
 
                     }
+                
                 default:
-                    break;
+                    {
+                        var varList = from variables in variableList
+                                      where variables.StartsWith(e.Text)
+                                      select variables;
+                        if (varList.Any())
+                        {
+                            foreach (String v in varList)
+                            {
+                                data.Add(new MyCompletionData(v));
+                            }
+                            completionWindow.Show();
+                            completionWindow.Closed += delegate {
+                                completionWindow = null;
+                            };
+                        }
+                        break;
+                    }
             }
         }
 
@@ -240,15 +272,10 @@ namespace CMM
         {
             if (e.Text.Length > 0 && completionWindow != null)
             {
-                //if (!char.IsLetterOrDigit(e.Text[0]))
-                //{
-                //    // Whenever a non-letter is typed while the completion window is open,
-                //    // insert the currently selected element.
-                //}
+
                     completionWindow.CompletionList.RequestInsertion(e);
             }
-            // Do not set e.Handled=true.
-            // We still want to insert the character that was typed.
+
         }
 
         private void MenuItem_File_News(object sender, RoutedEventArgs e)
