@@ -52,21 +52,29 @@ namespace CMM
         /// <returns>语法分析树</returns>
         public ParseTree SyntacticAnalysis(TokenResult tokenResult)
         {
+            // 开始构造语法分析树
+            this.targetTree = new ParseTree();
+
             bool isSuccess = true; // 表示语法分析是否成功
             List<ErrorInfo> totalErrorInfos = new List<ErrorInfo>(); // 总的报错信息
 
             // 将所有token读入栈
             for (int i = tokenResult.Tokens.Count - 1; i >= 0; i--)
             {
-                inputStack.Push(tokenResult.Tokens[i]);
+                if (tokenResult.Tokens[i].TokenType != TerminalType.NOTES)
+                {
+                    inputStack.Push(tokenResult.Tokens[i]);
+                }
             }
 
             // 将结束符号放入符号栈中
             ParseTreeNode EndNode = new ParseTreeNode(true, TerminalType.END, NEnum.DEFAULT);
             symbolStack.Push(EndNode);
 
-            // 开始构造语法分析树
-            this.targetTree = new ParseTree();
+            // 将program放入符号栈
+            //ParseTreeNode programNode = new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.program);
+            //symbolStack.Push(programNode);
+            symbolStack.Push(targetTree.Root);
 
             // 每次从输入栈中读取一个符号并更新符号栈的值
             // 当没有读到$时进行循环，如果下一个是结束符号$则结束循环
@@ -99,6 +107,8 @@ namespace CMM
                 {
                     // TODO 特殊考虑表达式
                     this.ExpAnalyse(symbolNode, out expErrorInfos);
+                    // 将exp出栈
+                    PopSymbolStack();
                     totalErrorInfos.AddRange(expErrorInfos);
                     continue;
                 }
@@ -130,7 +140,11 @@ namespace CMM
                     if (symbolNode.TSymbol == token.TokenType)
                     {
                         // 将符号表和输入表栈顶元素出栈
-                        symbolStack.Pop();
+                        // 如果符号栈栈顶元素是后一个元素子结点中的最后一个节点，则
+                        // 应该将上一个结点也出栈
+                        symbolNode.StringValue = token.StrValue;
+                        symbolNode.LineNum = token.LineNum;
+                        PopSymbolStack();
                         inputStack.Pop();
                     }
                     else
@@ -159,6 +173,85 @@ namespace CMM
         }
 
         /// <summary>
+        /// 出栈符号栈栈顶的元素，如果当前出栈元素是下一个子树节点的最后一个元素
+        /// 则将下一个元素也一起出栈
+        /// </summary>
+        /// <param name="isEmpty">待出栈的符号是否为空，默认为false</param>
+        private void PopSymbolStack(bool isEmpty = false)
+        {
+            ParseTreeNode topSymbol; // 栈顶元素
+            ParseTreeNode secondTopSymbol; // 栈顶里面一个的元素
+
+            // 如果当前元素为空，则还应该将其在父结点的childs列表中删去
+            if (isEmpty)
+            {
+                // 根据目前文法可知，两个取空的情况下，‘空’均位于父结点中的最后一个
+                // 所以在将当前结点出栈后，再删除父结点childs列表中最后一个值即可
+                topSymbol = symbolStack.Pop();
+                bool flag = false; // 是否需要将当前栈顶的符号出栈
+
+                // 如果还有下一个元素，则进行判断
+                if (symbolStack.Count > 0)
+                {
+                    secondTopSymbol = symbolStack.Peek();
+                    if (secondTopSymbol.Childs.Count == 0)
+                    {
+                        return;
+                    }
+                    if (secondTopSymbol.Childs.Last().TSymbol == topSymbol.TSymbol &&
+                        secondTopSymbol.Childs.Last().NSymbol == topSymbol.NSymbol)
+                    {
+                        flag = true;
+                    }
+                }
+
+                Stack<ParseTreeNode> tempStack = new Stack<ParseTreeNode>();
+                while(symbolStack.Count > 0)
+                {
+                    tempStack.Push(symbolStack.Pop());
+                    if (tempStack.Peek().Childs.Contains(topSymbol))
+                    {
+                        tempStack.Peek().Childs.Remove(topSymbol);
+                        break;
+                    }
+                }
+
+                // 将pop出来的元素重新push回符号栈
+                while(tempStack.Count > 0)
+                {
+                    symbolStack.Push(tempStack.Pop());
+                }
+
+                // 根据之前判断的结果选择是否将栈顶元素出栈
+                if (flag)
+                {
+                    PopSymbolStack(symbolStack.Peek().Childs.Count == 0);
+                }
+
+                return;
+            }
+            if (symbolStack.Count > 0)
+            {
+                topSymbol = symbolStack.Pop();
+
+                // 如果还有下一个元素，则进行判断
+                if(symbolStack.Count > 0 )
+                {
+                    secondTopSymbol = symbolStack.Peek();
+                    if (secondTopSymbol.Childs.Count == 0)
+                    {
+                        return;
+                    }
+                    if(secondTopSymbol.Childs.Last().TSymbol == topSymbol.TSymbol &&
+                        secondTopSymbol.Childs.Last().NSymbol == topSymbol.NSymbol)
+                    {
+                        PopSymbolStack();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// 单独对标识符进行语法分析
         /// </summary>
         /// <param name="symbolNode">符号表栈顶结点</param>
@@ -184,6 +277,8 @@ namespace CMM
             // 再判断之后有没有[
             if (isSuccess && ProcessNextTerminal(symbolNode, TerminalType.LBRACKET))
             {
+                // 出栈
+
                 // 再继续判断接下来是不是intVal和]
                 if (isSuccess && !ProcessNextTerminal(symbolNode, TerminalType.INTVAL))
                 {
@@ -198,6 +293,12 @@ namespace CMM
 
                     isSuccess = false;
                 }
+            }
+
+            // 将symbolStack栈顶的variable出栈
+            if(symbolStack.Peek().NSymbol == NEnum.variable)
+            {
+                symbolStack.Pop();
             }
 
             // 如果没有[则直接返回true，或者
@@ -230,6 +331,8 @@ namespace CMM
 
                 // 将目标终结符号加入到语法分析树中
                 treeNode = new ParseTreeNode(true, targetTerminal, NEnum.DEFAULT);
+                treeNode.StringValue = token.StrValue;
+                treeNode.LineNum = token.LineNum;
                 fatherNode.Childs.Add(treeNode);
 
                 // 将inputStack栈顶元素出栈
@@ -291,6 +394,12 @@ namespace CMM
                         symbolStack.Push(symbolNode.Childs[i]);
                     }
                 }
+
+                // 如果是Empty，则还应将符号栈栈顶元素出栈
+                if(production[0].TSymbol == TerminalType.EMPTY)
+                {
+                    PopSymbolStack(true);
+                }
             }
 
             return isSuccess;
@@ -298,6 +407,7 @@ namespace CMM
 
         /// <summary>
         /// 单独对表达式进行语法分析
+        /// 包括了对输入栈和符号栈对应元素的出栈
         /// </summary>
         /// <param name="fatherNode">当前符号栈正在研究的栈顶结点，该结点的NEnum为exp</param>
         /// <param name="errorInfos">待传出的错误信息</param>
@@ -341,6 +451,7 @@ namespace CMM
                 #endregion
             }
             #endregion
+
             return isSuccess;
         }
 
