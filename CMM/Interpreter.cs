@@ -54,14 +54,166 @@ namespace CMM
         /// 以及出错处理程序
         /// </summary>
         /// <param name="bpList">breakPoint列表，所有断点所在行数</param>
-        public void Run(List<int> bpList)
+        public InterpretResult Run(List<int> bpList)
         {
+            // 解释器最终结果
+            InterpretResult result = new InterpretResult(); ;
+
+            // 词法分析
             TokenResult tokenResult = WordAnalyse();
+            result.WordAnalyseResult = tokenResult;
+            if (!tokenResult.IsSuccess)
+            {
+                // 如果词法分析失败，则给出失败原因
+                result.IsSuccess = false;
+                result.Period = InterpretPeriod.Word;
+                result.ErrorInfos = tokenResult.ErrorInfos;
 
-            // TODO 词法.语法分析出错处理程序待做
+                return result;
+            }
 
+            // 语法分析
             ParseTree parseTree = SyntacticAnalyse(tokenResult, bpList);
+            result.SyntacticAnalyseResult = parseTree;
+            if (!parseTree.IsSuccess)
+            {
+                result.IsSuccess = false;
+                result.Period = InterpretPeriod.Syntactic;
+                result.ErrorInfos = parseTree.ErrorInfos;
 
+                return result;
+            }
+
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// 解释器运行阶段
+    /// </summary>
+    public enum InterpretPeriod
+    {
+        /// <summary>
+        /// 词法
+        /// </summary>
+        Word,
+        /// <summary>
+        /// 语法
+        /// </summary>
+        Syntactic,
+        /// <summary>
+        /// 语义
+        /// </summary>
+        Sentence,
+        /// <summary>
+        /// 解释器运行结束
+        /// </summary>
+        Finish
+    }
+
+    /// <summary>
+    /// 词法、语法封装类
+    /// </summary>
+    public class InterpretResult
+    {
+        /// <summary>
+        /// 是否解释运行成功
+        /// </summary>
+        public bool IsSuccess { get; set; }
+
+        /// <summary>
+        /// 报错信息列表
+        /// </summary>
+        public List<ErrorInfo> ErrorInfos { get; set; }
+
+        /// <summary>
+        /// 编译器当前运行的阶段
+        /// </summary>
+        public InterpretPeriod Period { get; set; }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="errorInfos">报错信息列表</param>
+        /// <param name="period">所处阶段</param>
+        public InterpretResult(bool isSuccess, InterpretPeriod period)
+        {
+            this.IsSuccess = isSuccess;
+            this.Period = period;
+            ErrorInfos = new List<ErrorInfo>();
+        }
+
+        /// <summary>
+        /// 全参数构造函数
+        /// </summary>
+        /// <param name="isSuccess">是否解释成功</param>
+        /// <param name="period">解释器运行到的阶段</param>
+        /// <param name="errorInfos">错误信息</param>
+        public InterpretResult(bool isSuccess, InterpretPeriod period, 
+            List<ErrorInfo> errorInfos)
+        {
+            this.IsSuccess = isSuccess;
+            this.Period = period;
+            this.ErrorInfos = errorInfos;
+        }
+
+        /// <summary>
+        /// 词法分析结果封装
+        /// </summary>
+        public TokenResult WordAnalyseResult { get; set; }
+
+        /// <summary>
+        /// 语法分析结果封装类
+        /// </summary>
+        public ParseTree SyntacticAnalyseResult { get; set; }
+
+        /// <summary>
+        /// 默认构造函数
+        /// </summary>
+        public InterpretResult()
+        {
+            this.IsSuccess = true;
+            this.Period = InterpretPeriod.Finish;
+            this.ErrorInfos = new List<ErrorInfo>();
+            this.WordAnalyseResult = null;
+            this.SyntacticAnalyseResult = null;
+        }
+
+        /// <summary>
+        /// 获取解释器当前报错信息的字符串
+        /// </summary>
+        /// <returns>解释器当前结果字符串</returns>
+        public string GetErrorString()
+        {
+            if (IsSuccess)
+            {
+                return "";
+            }
+
+            string errorString;
+            string periodString; // 程序因为报错而停止运行的阶段
+            switch (this.Period)
+            {
+                case InterpretPeriod.Word:
+                    periodString = "词法分析";
+                    break;
+                case InterpretPeriod.Syntactic:
+                    periodString = "语法分析";
+                    break;
+                case InterpretPeriod.Sentence:
+                    periodString = "语义分析";
+                    break;
+                default:
+                    periodString = "";
+                    break;
+            }
+            errorString = $"程序在 {periodString} 阶段出错，报错信息：\n";
+            foreach (ErrorInfo errorInfo in ErrorInfos)
+            {
+                errorString += errorInfo.ToString() + "\n";
+            }
+
+            return errorString;
         }
     }
 }

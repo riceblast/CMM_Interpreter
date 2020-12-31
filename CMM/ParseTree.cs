@@ -24,7 +24,7 @@ namespace CMM
         /// <summary>
         /// 报错信息
         /// </summary>
-        public List<ErrorInfo> errorInfos { get; set; }
+        public List<ErrorInfo> ErrorInfos { get; set; }
 
         /// <summary>
         /// 测试用字符串
@@ -38,7 +38,7 @@ namespace CMM
         {
             Root = new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.program);
             IsSuccess = true;
-            errorInfos = new List<ErrorInfo>();
+            ErrorInfos = new List<ErrorInfo>();
         }
 
         /// <summary>

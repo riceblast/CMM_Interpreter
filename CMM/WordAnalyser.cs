@@ -130,7 +130,7 @@ namespace CMM
                         {
                             AnalyseRow();
                             if (ch == '\0')
-                                throw new Exception("注释错误：没有注释结尾");
+                                throw new Exception("注释错误：缺少注释结尾");
                         }
                         return;
                     }
@@ -203,7 +203,7 @@ namespace CMM
                 value = TerminalType.REALVAL;
             }
             if (Char.IsLetter(ch) || ch == '.')
-                throw new Exception("数字错误：多个小数点");
+                throw new Exception("数字错误：存在多个小数点/数字不应包含字符串");
             Retract();
             if (ch == '.')
                 throw new Exception("数字错误：小数点后应该是数字");

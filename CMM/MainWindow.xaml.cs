@@ -455,7 +455,15 @@ namespace CMM
             {
                 bpList.Add(key);
             }
-            interpreter.Run(bpList);
+
+            // 运行词法和语法分析程序
+            InterpretResult result = interpreter.Run(bpList);
+
+            // 出错处理
+            if (!result.IsSuccess)
+            {
+                this.debugBox.Text = result.GetErrorString();
+            }
         }
     }
 }

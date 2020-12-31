@@ -43,7 +43,6 @@ namespace CMM
         {
             parsingTable = new List<ParsingTableItem>[NCount, TCount]; 
 
-            // TODO 利用文本初始化预测分析表
             for(int i = 0; i < parsingTable.GetLength(0); i++)
             {
                 for(int j = 0; j < parsingTable.GetLength(1); j++)
