@@ -62,11 +62,11 @@ namespace CMM
             // 词法分析
             TokenResult tokenResult = WordAnalyse();
             result.WordAnalyseResult = tokenResult;
+            result.Period = InterpretPeriod.Word;
             if (!tokenResult.IsSuccess)
             {
                 // 如果词法分析失败，则给出失败原因
                 result.IsSuccess = false;
-                result.Period = InterpretPeriod.Word;
                 result.ErrorInfos = tokenResult.ErrorInfos;
 
                 return result;
@@ -75,10 +75,10 @@ namespace CMM
             // 语法分析
             ParseTree parseTree = SyntacticAnalyse(tokenResult, bpList);
             result.SyntacticAnalyseResult = parseTree;
+            result.Period = InterpretPeriod.Syntactic;
             if (!parseTree.IsSuccess)
             {
                 result.IsSuccess = false;
-                result.Period = InterpretPeriod.Syntactic;
                 result.ErrorInfos = parseTree.ErrorInfos;
 
                 return result;
