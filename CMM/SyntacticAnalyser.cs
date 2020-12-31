@@ -606,7 +606,8 @@ namespace CMM
                     isSuccess = false;
                 }
 
-            }else if(ProcessNextTerminal(fatherNode, TerminalType.INTVAL))
+            }else if(ProcessNextTerminal(fatherNode, TerminalType.INTVAL,
+                TerminalType.REALVAL))
             {
                 // number
                 // factor此时语法分析结束
