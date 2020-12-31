@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -47,6 +48,10 @@ namespace CMM
             input.TextArea.TextEntered += textEditor_TextArea_TextEntered;
 
             interpreter = new Interpreter("");
+
+            //语义分析需要使用的委托
+            Constant.outPutAppend += outputAppendText;
+            Constant.outPutClean += outputCleanText;
         }
 
         //自动补全的内容类
@@ -423,7 +428,7 @@ namespace CMM
         /// </summary>
         /// <param name="s">输出</param>
         private void outputAppendText(string s) {
-            Dispatcher.Invoke(new Action(() => output.Text += s));
+            Dispatcher.Invoke(new Action(() => output.Text += s+"\n"));
         }
         /// <summary>
         /// 语义分析时清空输出
@@ -436,6 +441,8 @@ namespace CMM
         /// 调用这个方法唤醒线程，即在断点代码部分继续执行
         /// </summary>
         private void wake() {
+            string readstr = "12.3";
+            Constant.readstr = readstr;
             Constant.mreSet();
         }
 
@@ -458,12 +465,34 @@ namespace CMM
 
             // 运行词法和语法分析程序
             InterpretResult result = interpreter.Run(bpList);
+            //SentenceAnalysis.nodeAnalysis(result.SyntacticAnalyseResult.Root);
+            Thread thread = new Thread(new ParameterizedThreadStart(threadMethod));
+            object obj = result.SyntacticAnalyseResult.Root;
+            thread.Start(obj);
 
             // 出错处理
             if (!result.IsSuccess)
             {
                 this.debugBox.Text = result.GetErrorString();
             }
+        }
+        /// <summary>
+        /// 异步运行语义分析程序
+        /// </summary>
+        /// <param name="node"></param>
+        public static void threadMethod(object node)
+        {
+            ParseTreeNode n = (ParseTreeNode)node;
+            SentenceAnalysis.nodeAnalysis(n);
+        }
+        /// <summary>
+        /// 设置断点debug时下一步，以及read后的下一步
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Next_Click(object sender, RoutedEventArgs e)
+        {
+            wake();
         }
     }
 }

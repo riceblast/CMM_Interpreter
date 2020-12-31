@@ -15,6 +15,10 @@ namespace CMM
         /// </summary>
         private static string output="";
         /// <summary>
+        /// 输入
+        /// </summary>
+        public static string readstr = "";
+        /// <summary>
         /// 当前函数层数
         /// </summary>
         public static int currentScope=0;

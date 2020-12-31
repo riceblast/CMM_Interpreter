@@ -57,7 +57,7 @@ namespace CMM
         public InterpretResult Run(List<int> bpList)
         {
             // 解释器最终结果
-            InterpretResult result = new InterpretResult(); ;
+            InterpretResult result = new InterpretResult();
 
             // 词法分析
             TokenResult tokenResult = WordAnalyse();
