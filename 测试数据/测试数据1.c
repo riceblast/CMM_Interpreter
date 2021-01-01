@@ -27,7 +27,7 @@ write c;
 
 f = d + e;
 write f;
-f = e - d
+f = e - d;
 write f;
 f = d * e;
 write f;

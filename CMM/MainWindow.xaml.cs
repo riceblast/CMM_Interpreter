@@ -44,7 +44,7 @@ namespace CMM
         public MainWindow()
         {
             InitializeComponent();
-            XmlReader reader = XmlReader.Create("D:/迅雷下载/CMM_Interpreter/CMM/CMM.xshd");
+            XmlReader reader = XmlReader.Create("../../CMM.xshd");
             input.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
             variableList = new List<string>();
             breakPoints = new Dictionary<int, Point>();
@@ -463,7 +463,7 @@ namespace CMM
         /// 调用这个方法唤醒线程，即在断点代码部分继续执行
         /// </summary>
         private void wake() {
-            string readstr = "12.3";
+            string readstr = debugBox.Text;
             Constant.readstr = readstr;
             Constant.mreSet();
         }
@@ -494,6 +494,7 @@ namespace CMM
             if (!result.IsSuccess)
             {
                 this.debugBox.Text = result.GetErrorString();
+                return;
             }
             //SentenceAnalysis.nodeAnalysis(result.SyntacticAnalyseResult.Root);
             Constant.scopeTables = new List<ScopeTable>();
