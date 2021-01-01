@@ -121,12 +121,14 @@ namespace CMM
                         Constant.currentScopeIncrease();
                         ParseTreeNode stmtSequence = stmtBlock.Childs[1];
                         //stmt-sequence -> statement stmt-sequence | ε  // 语句序列
-                        while (stmtSequence.Childs.Count == 2)
+                        while (stmtSequence.Childs.Count >= 2)
                         {
-                            StatementAnalysis(stmtSequence.Childs[0]);
-                            //判断是否能运行
-                            Constant._mre.WaitOne();
-                            stmtSequence = stmtSequence.Childs[1];
+                            for (int j=0;j< stmtSequence.Childs.Count-1;j++) { 
+                                StatementAnalysis(stmtSequence.Childs[j]);
+                                //判断是否能运行
+                                Constant._mre.WaitOne();
+                            }
+                            stmtSequence=stmtSequence.Childs[stmtSequence.Childs.Count - 1];
                         }
                         if (stmtSequence.NSymbol == NEnum.statement)
                         {
@@ -176,12 +178,15 @@ namespace CMM
                         Constant.currentScopeIncrease();
                         ParseTreeNode stmtSequence = stmtBlock.Childs[1];
                         //stmt-sequence -> statement stmt-sequence | ε  // 语句序列
-                        while (stmtSequence.Childs.Count == 2)
+                        while (stmtSequence.Childs.Count >= 2)
                         {
-                            StatementAnalysis(stmtSequence.Childs[0]);
-                            //判断是否能运行
-                            Constant._mre.WaitOne();
-                            stmtSequence = stmtSequence.Childs[1];
+                            for (int j = 0; j < stmtSequence.Childs.Count - 1; j++)
+                            {
+                                StatementAnalysis(stmtSequence.Childs[j]);
+                                //判断是否能运行
+                                Constant._mre.WaitOne();
+                            }
+                            stmtSequence = stmtSequence.Childs[stmtSequence.Childs.Count - 1];
                         }
                         if (stmtSequence.NSymbol == NEnum.statement)
                         {
@@ -229,12 +234,15 @@ namespace CMM
                         Constant.currentScopeIncrease();
                         ParseTreeNode stmtSequence = stmtBlock.Childs[1];
                         //stmt-sequence -> statement stmt-sequence | ε  // 语句序列
-                        while (stmtSequence.Childs.Count == 2)
+                        while (stmtSequence.Childs.Count >= 2)
                         {
-                            StatementAnalysis(stmtSequence.Childs[0]);
-                            //判断是否能运行
-                            Constant._mre.WaitOne();
-                            stmtSequence = stmtSequence.Childs[1];
+                            for (int j = 0; j < stmtSequence.Childs.Count - 1; j++)
+                            {
+                                StatementAnalysis(stmtSequence.Childs[j]);
+                                //判断是否能运行
+                                Constant._mre.WaitOne();
+                            }
+                            stmtSequence = stmtSequence.Childs[stmtSequence.Childs.Count - 1];
                         }
                         if (stmtSequence.NSymbol == NEnum.statement)
                         {
