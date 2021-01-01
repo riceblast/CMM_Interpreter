@@ -137,6 +137,8 @@ namespace CMM
                         if (token.TokenType == TerminalType.END)
                         {
                             // 语法分析结束，语法分析成功
+                            symbolStack.Pop();
+                            inputStack.Pop();
                             break;
                         }
                         else
@@ -295,14 +297,14 @@ namespace CMM
                 if (isSuccess && !ProcessNextTerminal(symbolNode, TerminalType.INTVAL))
                 {
                     // TODO 出错处理
-
+                    ErrorEncapsulation("数组索引应为正整数");
                     isSuccess = false;
                 }
 
                 if (isSuccess && !ProcessNextTerminal(symbolNode, TerminalType.RBRACKET))
                 {
                     // TODO 出错处理
-
+                    ErrorEncapsulation("数组索引右括号 ']' 缺失");
                     isSuccess = false;
                 }
             }
@@ -378,22 +380,13 @@ namespace CMM
             if (productions == null || productions.Count == 0)
             {
                 // TODO 语法分析错误处理
-
+                ErrorEncapsulation($"语法成分: {N2String(symbolNode.NSymbol)} 不能以" +
+                    $" {T2String(token.TokenType)} 符号开头");
                 isSuccess = false;
             }
             else
             {
                 List<ParseTreeNode> production = productions[0].production;
-
-                // 断点处理
-                // 如果对应的token是断点所在行，则加入断点
-                if(symbolNode.NSymbol == NEnum.statement &&
-                    this.bPLineNums.Contains(token.LineNum))
-                {
-                    treeNode = new ParseTreeNode(true, TerminalType.BREAKPOINT,
-                        NEnum.DEFAULT);
-                    symbolNode.Childs.Add(treeNode);
-                } 
 
                 // 生成对应的树结点，并设置子树
                 for (int i = 0; i < production.Count; i++)
@@ -412,14 +405,39 @@ namespace CMM
                 for (int i = symbolNode.Childs.Count - 1; i >= 0; i--)
                 {
                     // 对于“空”终结符号，则不push任何符号
-                    if (symbolNode.Childs[i].TSymbol != TerminalType.EMPTY)
+                    // 对于“断点”，不push任何符号
+                    if (symbolNode.Childs[i].TSymbol != TerminalType.EMPTY &&
+                        symbolNode.Childs[i].TSymbol != TerminalType.BREAKPOINT)
                     {
                         symbolStack.Push(symbolNode.Childs[i]);
                     }
                 }
 
+                // 断点处理
+                // 如果对应的token是断点所在行，则加入断点
+                // 如果是stmtblock和stmtsequence均需要断点处理
+                treeNode = new ParseTreeNode(false, TerminalType.DEFAULT,
+                    NEnum.statement);
+                treeNode.Childs.Add(new ParseTreeNode(true, TerminalType.BREAKPOINT,
+                    NEnum.DEFAULT));
+                if (symbolNode.NSymbol == NEnum.stmt_sequence &&
+                    production[0].TSymbol != TerminalType.EMPTY &&
+                    this.bPLineNums.Contains(token.LineNum))
+                {
+                    // stmt-sequence
+                    symbolNode.Childs.Insert(0, treeNode);
+                }
+                if (symbolNode.NSymbol == NEnum.stmt_block &&
+                    production[0].TSymbol != TerminalType.EMPTY &&
+                    (this.bPLineNums.Contains(token.LineNum) || 
+                    this.bPLineNums.Contains(token.LineNum + 1)))
+                {
+                    // stmt-block
+                    symbolNode.Childs.Insert(1, treeNode);
+                }
+
                 // 如果是Empty，则还应将符号栈栈顶元素出栈
-                if(production[0].TSymbol == TerminalType.EMPTY)
+                if (production[0].TSymbol == TerminalType.EMPTY)
                 {
                     PopSymbolStack(true);
                 }
@@ -448,7 +466,7 @@ namespace CMM
             List<ErrorInfo> errorInfosAddtive_1;
             if (!AddtiveExpAnalyse(treeNode, out errorInfosAddtive_1))
             {
-                // 出错处理
+                // TODO 出错处理
 
                 isSuccess = false;
             }
@@ -467,7 +485,7 @@ namespace CMM
                 List<ErrorInfo> errorInfosAddtive_2;
                 if (!AddtiveExpAnalyse(treeNode, out errorInfosAddtive_2))
                 {
-                    // 出错处理
+                    // TODO 出错处理
 
                     isSuccess = false;
                 }
@@ -499,7 +517,7 @@ namespace CMM
             if(!TermAnalyse(treeNode, out termErrorInfos))
             {
                 // TODO 错误处理
-                Error();
+                //Error();
                 isSuccess = false;
             }
             #endregion
@@ -517,7 +535,7 @@ namespace CMM
                 if(!AddtiveExpAnalyse(treeNode, out addtiveExpErrorInfos))
                 {
                     // TODO 出错处理
-                    Error();
+                    //Error();
                     isSuccess = false;
                 }
 
@@ -550,7 +568,7 @@ namespace CMM
             if(!FactorAnalyse(treeNode, out factorErrorInfos))
             {
                 // 出错处理
-                Error();
+                //Error();
                 isSuccess = false;
             }
             #endregion
@@ -567,7 +585,7 @@ namespace CMM
                 if(!TermAnalyse(treeNode, out termErrorInfos))
                 {
                     // 出错处理
-                    Error();
+                    //Error();
                     isSuccess = false;
                 }
                 #endregion
@@ -602,11 +620,13 @@ namespace CMM
 
                 if(!ProcessNextTerminal(fatherNode, TerminalType.RPARENT))
                 {
-                    // 出错处理
+                    // TODO 出错处理
+                    ErrorEncapsulation("表达式中右括号未闭合");
                     isSuccess = false;
                 }
 
-            }else if(ProcessNextTerminal(fatherNode, TerminalType.INTVAL))
+            }else if(ProcessNextTerminal(fatherNode, TerminalType.INTVAL,
+                TerminalType.REALVAL))
             {
                 // number
                 // factor此时语法分析结束
@@ -616,8 +636,8 @@ namespace CMM
                 // add-op exp
                 if(!ExpAnalyse(fatherNode, out addOpErrorInfos))
                 {
-                    // 出错处理
-                    Error();
+                    // TODO 出错处理
+                    //Error();
                     isSuccess = false;
                 }
             }
