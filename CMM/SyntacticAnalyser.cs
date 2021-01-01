@@ -163,7 +163,7 @@ namespace CMM
                     else
                     {
                         // TODO　语法分析出错处理
-                        ErrorEncapsulation($"缺少符号: {T2String(symbolNode.TSymbol)}");
+                        ErrorEncapsulation($"缺少符号 '{T2String(symbolNode.TSymbol)}'");
                     }
                 }
                 else
@@ -172,8 +172,8 @@ namespace CMM
                     if (!LookUpTable(symbolNode, out NonErrorInfos))
                     {
                         // TODO 出错处理
-                        ErrorEncapsulation($"语法成分: {N2String(symbolNode.NSymbol)} 不能以" +
-                            $" {T2String(token.TokenType)} 符号开头");
+                        ErrorEncapsulation($"语法成分 '{N2String(symbolNode.NSymbol)}' 不能以" +
+                            $" '{T2String(token.TokenType)}' 符号开头");
                     }
                 }
                 #endregion
@@ -285,7 +285,7 @@ namespace CMM
             if (!ProcessNextTerminal(symbolNode, TerminalType.ID))
             {
                 // TODO 出错处理
-                ErrorEncapsulation($"源码此处是: {inputStack.Peek().StrValue} 缺少语法成分: 标识符");
+                ErrorEncapsulation($"源码此处是 '{inputStack.Peek().StrValue}' 缺少语法成分 '标识符'");
             }
 
             // 再判断之后有没有[
