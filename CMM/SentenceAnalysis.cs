@@ -61,18 +61,18 @@ namespace CMM
             //判断是不是断点
             if (node.Childs[0].TSymbol== TerminalType.BREAKPOINT)
             {
-                Constant.outputAppend("-------");
+                Constant.deBugAppend("-------");
                 foreach (ScopeTable scope in Constant.scopeTables) {
 
                     if (String.IsNullOrEmpty(scope.value))
                     {
-                        Constant.outputAppend("符号表中名为" + scope.name + "的表项值为空");
+                        Constant.deBugAppend("符号表中名为" + scope.name + "的表项值为空");
                     }
                     else {
-                        Constant.outputAppend("符号表中名为" + scope.name + "的表项值为" + scope.value);
+                        Constant.deBugAppend("符号表中名为" + scope.name + "的表项值为" + scope.value);
                     }
                 }
-                Constant.outputAppend("-------");
+                Constant.deBugAppend("-------");
                 //如果是断点则阻塞线程
                 Constant.mreReset();
                 return;
@@ -261,6 +261,11 @@ namespace CMM
                     string name = variable.Childs[0].StringValue;
                     //查找并赋值
                     ScopeTable scopeTable = Constant.check(name);
+                    if (scopeTable == null) {
+                        ErrorInfo error = new ErrorInfo(assignStmt.Childs[1].LineNum, "符号表中没有"+ name + "！");
+                        Constant.outputAppend(error.ToString());
+                        return;
+                    }
 
                     if (IsNumberic(expToValue(assignStmt.Childs[2])))
                     {
@@ -305,6 +310,11 @@ namespace CMM
 
                     //查找
                     ScopeTable scopeTable = Constant.check(name);
+                    if (scopeTable == null) {
+                        ErrorInfo error = new ErrorInfo(assignStmt.Childs[1].LineNum, "符号表中没有" + name + "！");
+                        Constant.outputAppend(error.ToString());
+                        return;
+                    }
                     //判断是否越界
                     string type = scopeTable.type;
                     string a = type.Substring(type.IndexOf('[') + 1, type.IndexOf(']') - type.IndexOf('[') - 1);
@@ -515,7 +525,16 @@ namespace CMM
             scriptControl.UseSafeSubset = true;
             scriptControl.Language = "JScript";
             string a = nodeToString(node);
-            return scriptControl.Eval(a).ToString();
+            string result="";
+            try
+            {
+                result = scriptControl.Eval(a).ToString();
+            }
+            catch {
+                Constant.outputAppend("表达式计算错误，默认返回false");
+                return "False";
+            }
+            return result;
         }
         /// <summary>
         /// 节点转字符串
@@ -530,7 +549,13 @@ namespace CMM
                 if (node.TSymbol == TerminalType.ID)
                 {
                     ScopeTable scope = Constant.check(node.StringValue);
-                    if (scope.type != "int" && scope.type != "real") {
+                    if (scope == null)
+                    {
+                        ErrorInfo error = new ErrorInfo(node.LineNum, "符号表中没有" + node.StringValue + "！");
+                        Constant.outputAppend(error.ToString());
+                        //计算出错
+                        return "<>";
+                    }else if (scope.type != "int" && scope.type != "real") {
                         string[] arr1 = scope.value.Split(',');
                         str += "[";
                         for (int i = 0; i < arr1.Length; i++) {
@@ -539,7 +564,6 @@ namespace CMM
                         str += "]";
                         return str;
                     }
-                    return Constant.check(node.StringValue).value;
                 } else if(node.StringValue=="<>")
                 {
                     return "!=";
