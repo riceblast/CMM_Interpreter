@@ -470,6 +470,10 @@ namespace CMM
         /// <param name="e"></param>
         private void Run_Click(object sender, RoutedEventArgs e)
         {
+            // 重置输出和debug窗口
+            output.Text = "";
+            debugBox.Text = "";
+
             // 更新解释器的源代码属性
             this.interpreter.SourceCode = input.Text;
 

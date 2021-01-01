@@ -66,7 +66,7 @@ namespace CMM
             // 初始化断点列表
             this.bPLineNums = bpList;
 
-            bool isSuccess = true; // 表示语法分析是否成功
+            this.targetTree.IsSuccess = true; // 表示语法分析是否成功
             List<ErrorInfo> totalErrorInfos = new List<ErrorInfo>(); // 总的报错信息
 
             // 将所有token读入栈
@@ -145,7 +145,7 @@ namespace CMM
                         {
                             // TODO 语法分析出错处理
                             ErrorEncapsulation("程序结尾存在多余字符串");
-                            isSuccess = false;
+                            //isSuccess = false;
                         }
                     }
 
@@ -172,8 +172,8 @@ namespace CMM
                     if (!LookUpTable(symbolNode, out NonErrorInfos))
                     {
                         // TODO 出错处理
-                        ErrorEncapsulation($"语法成分: {N2String(symbolNode.NSymbol)}" +
-                            $" 不能以 {inputStack.Peek().StrValue} 符号开头");
+                        ErrorEncapsulation($"语法成分: {N2String(symbolNode.NSymbol)} 不能以" +
+                            $" {T2String(token.TokenType)} 符号开头");
                     }
                 }
                 #endregion
@@ -181,8 +181,8 @@ namespace CMM
             #endregion
 
             // 返回构建好的语法分析树
-            this.targetTree.IsSuccess = isSuccess;
-            this.targetTree.ErrorInfos = totalErrorInfos.OrderBy(e => e.LineNum).ToList();
+            //this.targetTree.IsSuccess = isSuccess;
+            this.targetTree.ErrorInfos = this.targetTree.ErrorInfos.OrderBy(e => e.LineNum).ToList();
 
             return this.targetTree;
         }
@@ -380,8 +380,6 @@ namespace CMM
             if (productions == null || productions.Count == 0)
             {
                 // TODO 语法分析错误处理
-                ErrorEncapsulation($"语法成分: {N2String(symbolNode.NSymbol)} 不能以" +
-                    $" {T2String(token.TokenType)} 符号开头");
                 isSuccess = false;
             }
             else
@@ -427,14 +425,14 @@ namespace CMM
                     // stmt-sequence
                     symbolNode.Childs.Insert(0, treeNode);
                 }
-                if (symbolNode.NSymbol == NEnum.stmt_block &&
-                    production[0].TSymbol != TerminalType.EMPTY &&
-                    (this.bPLineNums.Contains(token.LineNum) || 
-                    this.bPLineNums.Contains(token.LineNum + 1)))
-                {
-                    // stmt-block
-                    symbolNode.Childs.Insert(1, treeNode);
-                }
+                //if (symbolNode.NSymbol == NEnum.stmt_block &&
+                //    production[0].TSymbol != TerminalType.EMPTY &&
+                //    (this.bPLineNums.Contains(token.LineNum) || 
+                //    this.bPLineNums.Contains(token.LineNum + 1)))
+                //{
+                //    // stmt-block
+                //    symbolNode.Childs.Insert(1, treeNode);
+                //}
 
                 // 如果是Empty，则还应将符号栈栈顶元素出栈
                 if (production[0].TSymbol == TerminalType.EMPTY)
@@ -841,6 +839,11 @@ namespace CMM
             // 寻找式后字并将输入符号串出栈
             while(inputStack.Count > 0)
             {
+                if (tEnums.Contains(inputStack.Peek().TokenType))
+                {
+                    break;   
+                }
+
                 token = inputStack.Pop();
 
                 // 如果找到了式后字，则将输入串放回栈顶
