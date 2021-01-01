@@ -137,6 +137,8 @@ namespace CMM
                         if (token.TokenType == TerminalType.END)
                         {
                             // 语法分析结束，语法分析成功
+                            symbolStack.Pop();
+                            inputStack.Pop();
                             break;
                         }
                         else

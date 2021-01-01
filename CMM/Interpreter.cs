@@ -73,6 +73,7 @@ namespace CMM
             }
 
             // 语法分析
+            this.syntacticAnalyser = new SyntacticAnalyser();
             ParseTree parseTree = SyntacticAnalyse(tokenResult, bpList);
             result.SyntacticAnalyseResult = parseTree;
             result.Period = InterpretPeriod.Syntactic;
