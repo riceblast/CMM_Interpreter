@@ -564,6 +564,7 @@ namespace CMM
                         str += "]";
                         return str;
                     }
+                    return scope.value;
                 } else if(node.StringValue=="<>")
                 {
                     return "!=";
