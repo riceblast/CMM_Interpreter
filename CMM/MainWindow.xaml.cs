@@ -465,16 +465,20 @@ namespace CMM
 
             // 运行词法和语法分析程序
             InterpretResult result = interpreter.Run(bpList);
-            //SentenceAnalysis.nodeAnalysis(result.SyntacticAnalyseResult.Root);
-            Thread thread = new Thread(new ParameterizedThreadStart(threadMethod));
-            object obj = result.SyntacticAnalyseResult.Root;
-            thread.Start(obj);
 
             // 出错处理
             if (!result.IsSuccess)
             {
                 this.debugBox.Text = result.GetErrorString();
+                return;
             }
+
+            //SentenceAnalysis.nodeAnalysis(result.SyntacticAnalyseResult.Root);
+            Thread thread = new Thread(new ParameterizedThreadStart(threadMethod));
+            object obj = result.SyntacticAnalyseResult.Root;
+            thread.Start(obj);
+
+
         }
         /// <summary>
         /// 异步运行语义分析程序
