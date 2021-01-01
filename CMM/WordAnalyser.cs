@@ -134,6 +134,15 @@ namespace CMM
                         }
                         return;
                     }
+                    else if (ch == '/')
+                    {
+                        buffer = "";
+                        value = TerminalType.NOTES;
+                        Read();
+                        //跳过注释
+                        while (Peek() != '\r' && Peek() != '\n' && ch != '\0') ;
+                        return;
+                    }
                     else
                     {
                         Retract();
