@@ -61,18 +61,36 @@ namespace CMM
             //判断是不是断点
             if (node.Childs[0].TSymbol== TerminalType.BREAKPOINT)
             {
-                Constant.deBugAppend("-------");
-                foreach (ScopeTable scope in Constant.scopeTables) {
-
+                string debugString;
+                debugString = "-------\n";
+                foreach (ScopeTable scope in Constant.scopeTables)
+                {
                     if (String.IsNullOrEmpty(scope.value))
                     {
-                        Constant.deBugAppend("符号表中名为" + scope.name + "的表项值为空");
+                        debugString += "符号表中名为" + scope.name + "的表项值为空\n";
+                        //Constant.deBugAppend("符号表中名为" + scope.name + "的表项值为空");
                     }
-                    else {
-                        Constant.deBugAppend("符号表中名为" + scope.name + "的表项值为" + scope.value);
+                    else
+                    {
+                        debugString += "符号表中名为" + scope.name + "的表项值为" + scope.value + "\n";
+                        //Constant.deBugAppend("符号表中名为" + scope.name + "的表项值为" + scope.value);
                     }
                 }
-                Constant.deBugAppend("-------");
+                debugString += "-------\n";
+                Constant.deBugAppend(debugString);
+
+                //Constant.deBugAppend("-------");
+                //foreach (ScopeTable scope in Constant.scopeTables) {
+
+                //    if (String.IsNullOrEmpty(scope.value))
+                //    {
+                //        Constant.deBugAppend("符号表中名为" + scope.name + "的表项值为空");
+                //    }
+                //    else {
+                //        Constant.deBugAppend("符号表中名为" + scope.name + "的表项值为" + scope.value);
+                //    }
+                //}
+                //Constant.deBugAppend("-------");
                 //如果是断点则阻塞线程
                 Constant.mreReset();
                 return;

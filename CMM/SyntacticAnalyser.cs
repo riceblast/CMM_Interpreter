@@ -59,7 +59,8 @@ namespace CMM
         /// <param name="tokenResult">由词法分析得到的token结果</param>
         /// <param name="bpList">断点行号列表</param>
         /// <returns>语法分析树</returns>
-        public ParseTree SyntacticAnalysis(TokenResult tokenResult, List<int> bpList)
+        public ParseTree SyntacticAnalysis(TokenResult tokenResult, 
+            List<int> bpList)
         {
             #region 语法分析初始化
 
@@ -272,7 +273,8 @@ namespace CMM
         /// <param name="symbolNode">符号表栈顶结点</param>
         /// <param name="errorInfos">待传出的错误信息</param>
         /// <returns>是否语法分析成功，如果返回值为false，则errorInof不为空</returns>
-        private bool VariableAnalyse(ParseTreeNode symbolNode, out List<ErrorInfo> errorInfos)
+        private bool VariableAnalyse(ParseTreeNode symbolNode, 
+            out List<ErrorInfo> errorInfos)
         {
             errorInfos = new List<ErrorInfo>();
             bool isSuccess = true; // 是否语法分析成功
@@ -364,7 +366,8 @@ namespace CMM
         /// </summary>
         /// <param name="symbolNode">当前正在研究的符号表的栈顶元素</param>
         /// <returns>是否语法分析成功</returns>
-        private bool LookUpTable(ParseTreeNode symbolNode, out List<ErrorInfo> errorInfos)
+        private bool LookUpTable(ParseTreeNode symbolNode, 
+            out List<ErrorInfo> errorInfos)
         {
             errorInfos = new List<ErrorInfo>();
             bool isSuccess = true; // 是否语法分析成功
@@ -451,7 +454,8 @@ namespace CMM
         /// <param name="fatherNode">当前符号栈正在研究的栈顶结点，该结点的NEnum为exp</param>
         /// <param name="errorInfos">待传出的错误信息</param>
         /// <returns>是否语法分析成功，如果返回值为false，则errorInof不为空</returns>
-        private bool ExpAnalyse(ParseTreeNode fatherNode, out List<ErrorInfo> errorInfos)
+        private bool ExpAnalyse(ParseTreeNode fatherNode, 
+            out List<ErrorInfo> errorInfos)
         {
             errorInfos = new List<ErrorInfo>();
             bool isSuccess = true; // 是否语法分析成功

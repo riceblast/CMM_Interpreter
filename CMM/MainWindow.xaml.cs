@@ -310,13 +310,13 @@ namespace CMM
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "代码文件.*c|*.c";
 
-
             if (ofd.ShowDialog() == true)
             {
                 FilePath = ofd.FileName;
                 FileStream file = new FileStream(FilePath, FileMode.Open, FileAccess.ReadWrite);
                 StreamReader reader = new StreamReader(file, System.Text.Encoding.Default);
-                string str = reader.ReadToEnd();                    // 如果没有System.Text.Encoding.Default  会出现编码问题
+                // 如果没有System.Text.Encoding.Default  会出现编码问题
+                string str = reader.ReadToEnd();                    
                 reader.Close();
                 file.Close();
                 input.Text = str;
@@ -450,7 +450,7 @@ namespace CMM
         /// <param name="s"></param>
         private void debugAppendText(string s)
         {
-            Dispatcher.Invoke(new Action(() => debugBox.Text += s + "\n"));
+            Dispatcher.Invoke(new Action(() => debugBox.Text = s + "\n"));
         }
         /// <summary>
         /// 语义分析时debug清空
@@ -477,6 +477,7 @@ namespace CMM
         {
             // 重置输出和debug窗口
             output.Text = "";
+            debugBox.Text = "";
 
             // 更新解释器的源代码属性
             this.interpreter.SourceCode = input.Text;
