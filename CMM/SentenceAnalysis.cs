@@ -42,6 +42,8 @@ namespace CMM
                 {
                     case NEnum.statement:
                         StatementAnalysis(node);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
                         break;
                     default:
                         nodeAnalysis(node);
@@ -96,11 +98,21 @@ namespace CMM
                     //遇到stmtBlock
                     ParseTreeNode stmtBlock = ifStmtBlock.Childs[4];
                     //stmt - block->{statement} | { stmt - sequence }   // 语句块
-
+                    if (stmtBlock.Childs.Count == 4)
+                    {
+                        Constant.currentScopeIncrease();
+                        StatementAnalysis(stmtBlock.Childs[1]);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
+                        Constant.currentScopeDecrease();
+                        stmtBlock.Childs.RemoveAt(1);
+                    }
                     if (stmtBlock.Childs[1].NSymbol == NEnum.statement)
                     {
                         Constant.currentScopeIncrease();
                         StatementAnalysis(stmtBlock.Childs[1]);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
                         Constant.currentScopeDecrease();
                     }
 
@@ -112,9 +124,22 @@ namespace CMM
                         while (stmtSequence.Childs.Count == 2)
                         {
                             StatementAnalysis(stmtSequence.Childs[0]);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
                             stmtSequence = stmtSequence.Childs[1];
                         }
-                        StatementAnalysis(stmtSequence.Childs[0]);
+                        if (stmtSequence.NSymbol == NEnum.statement)
+                        {
+                            StatementAnalysis(stmtSequence);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
+                        }
+                        else
+                        {
+                            StatementAnalysis(stmtSequence.Childs[0]);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
+                        }
                         Constant.currentScopeDecrease();
                     }
                 }
@@ -129,11 +154,21 @@ namespace CMM
                     ParseTreeNode elseStmtBlock = ifStmt.Childs[1];
                     ParseTreeNode stmtBlock = elseStmtBlock.Childs[1];
                     //stmt - block->{statement }| { stmt - sequence }   // 语句块
-
+                    if (stmtBlock.Childs.Count == 4)
+                    {
+                        Constant.currentScopeIncrease();
+                        StatementAnalysis(stmtBlock.Childs[1]);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
+                        Constant.currentScopeDecrease();
+                        stmtBlock.Childs.RemoveAt(1);
+                    }
                     if (stmtBlock.Childs[1].NSymbol == NEnum.statement)
                     {
                         Constant.currentScopeIncrease();
                         StatementAnalysis(stmtBlock.Childs[1]);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
                         Constant.currentScopeDecrease();
                     }
                     else if (!stmtBlock.Childs[1].IsLeaf)
@@ -144,9 +179,22 @@ namespace CMM
                         while (stmtSequence.Childs.Count == 2)
                         {
                             StatementAnalysis(stmtSequence.Childs[0]);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
                             stmtSequence = stmtSequence.Childs[1];
                         }
-                        StatementAnalysis(stmtSequence.Childs[0]);
+                        if (stmtSequence.NSymbol == NEnum.statement)
+                        {
+                            StatementAnalysis(stmtSequence);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
+                        }
+                        else
+                        {
+                            StatementAnalysis(stmtSequence.Childs[0]);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
+                        }
                         Constant.currentScopeDecrease();
                     }
                 }
@@ -172,6 +220,7 @@ namespace CMM
                     {
                         Constant.currentScopeIncrease();
                         StatementAnalysis(stmtBlock.Childs[1]);
+                        Constant._mre.WaitOne();
                         Constant.currentScopeDecrease();
                     }
 
@@ -190,9 +239,11 @@ namespace CMM
                         if (stmtSequence.NSymbol == NEnum.statement)
                         {
                             StatementAnalysis(stmtSequence);
+                            Constant._mre.WaitOne();
                         }
                         else {
                             StatementAnalysis(stmtSequence.Childs[0]);
+                            Constant._mre.WaitOne();
                         }
                         Constant.currentScopeDecrease();
                     }
@@ -482,13 +533,16 @@ namespace CMM
                     if (scope.type != "int" && scope.type != "real") {
                         string[] arr1 = scope.value.Split(',');
                         str += "[";
-                        for (int i=0;i<arr1.Length;i++) {
+                        for (int i = 0; i < arr1.Length; i++) {
                             str += arr1[i] + ",";
                         }
                         str += "]";
                         return str;
                     }
                     return Constant.check(node.StringValue).value;
+                } else if(node.StringValue=="<>")
+                {
+                    return "!=";
                 }
                 return node.StringValue;
             }
