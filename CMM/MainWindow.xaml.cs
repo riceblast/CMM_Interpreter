@@ -121,6 +121,8 @@ namespace CMM
                 //pos.Y = TextView.ActualHeight;
                 pos.Y += TextView.VerticalOffset;
                 VisualLine vl = TextView.GetVisualLineFromVisualTop(pos.Y);
+                if (vl == null)
+                    return;
                 TextLine tl = vl.GetTextLineByVisualYPosition(pos.Y);
                 int lineNumber = vl.FirstDocumentLine.LineNumber;
                 if (breakPoints.ContainsKey(lineNumber))
