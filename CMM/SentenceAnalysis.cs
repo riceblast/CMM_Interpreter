@@ -42,6 +42,8 @@ namespace CMM
                 {
                     case NEnum.statement:
                         StatementAnalysis(node);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
                         break;
                     default:
                         nodeAnalysis(node);
@@ -57,10 +59,23 @@ namespace CMM
         public static void StatementAnalysis(ParseTreeNode node)
         {
             //判断是不是断点
-            if (false)
+            if (node.Childs[0].TSymbol== TerminalType.BREAKPOINT)
             {
+                Constant.deBugAppend("-------");
+                foreach (ScopeTable scope in Constant.scopeTables) {
+
+                    if (String.IsNullOrEmpty(scope.value))
+                    {
+                        Constant.deBugAppend("符号表中名为" + scope.name + "的表项值为空");
+                    }
+                    else {
+                        Constant.deBugAppend("符号表中名为" + scope.name + "的表项值为" + scope.value);
+                    }
+                }
+                Constant.deBugAppend("-------");
                 //如果是断点则阻塞线程
                 Constant.mreReset();
+                return;
             }
             //判断是否能运行
             Constant._mre.WaitOne();
@@ -83,11 +98,21 @@ namespace CMM
                     //遇到stmtBlock
                     ParseTreeNode stmtBlock = ifStmtBlock.Childs[4];
                     //stmt - block->{statement} | { stmt - sequence }   // 语句块
-
+                    if (stmtBlock.Childs.Count == 4)
+                    {
+                        Constant.currentScopeIncrease();
+                        StatementAnalysis(stmtBlock.Childs[1]);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
+                        Constant.currentScopeDecrease();
+                        stmtBlock.Childs.RemoveAt(1);
+                    }
                     if (stmtBlock.Childs[1].NSymbol == NEnum.statement)
                     {
                         Constant.currentScopeIncrease();
                         StatementAnalysis(stmtBlock.Childs[1]);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
                         Constant.currentScopeDecrease();
                     }
 
@@ -96,12 +121,27 @@ namespace CMM
                         Constant.currentScopeIncrease();
                         ParseTreeNode stmtSequence = stmtBlock.Childs[1];
                         //stmt-sequence -> statement stmt-sequence | ε  // 语句序列
-                        while (stmtSequence.Childs.Count == 2)
+                        while (stmtSequence.Childs.Count >= 2)
+                        {
+                            for (int j=0;j< stmtSequence.Childs.Count-1;j++) { 
+                                StatementAnalysis(stmtSequence.Childs[j]);
+                                //判断是否能运行
+                                Constant._mre.WaitOne();
+                            }
+                            stmtSequence=stmtSequence.Childs[stmtSequence.Childs.Count - 1];
+                        }
+                        if (stmtSequence.NSymbol == NEnum.statement)
+                        {
+                            StatementAnalysis(stmtSequence);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
+                        }
+                        else
                         {
                             StatementAnalysis(stmtSequence.Childs[0]);
-                            stmtSequence = stmtSequence.Childs[1];
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
                         }
-                        StatementAnalysis(stmtSequence.Childs[0]);
                         Constant.currentScopeDecrease();
                     }
                 }
@@ -116,11 +156,21 @@ namespace CMM
                     ParseTreeNode elseStmtBlock = ifStmt.Childs[1];
                     ParseTreeNode stmtBlock = elseStmtBlock.Childs[1];
                     //stmt - block->{statement }| { stmt - sequence }   // 语句块
-
+                    if (stmtBlock.Childs.Count == 4)
+                    {
+                        Constant.currentScopeIncrease();
+                        StatementAnalysis(stmtBlock.Childs[1]);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
+                        Constant.currentScopeDecrease();
+                        stmtBlock.Childs.RemoveAt(1);
+                    }
                     if (stmtBlock.Childs[1].NSymbol == NEnum.statement)
                     {
                         Constant.currentScopeIncrease();
                         StatementAnalysis(stmtBlock.Childs[1]);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
                         Constant.currentScopeDecrease();
                     }
                     else if (!stmtBlock.Childs[1].IsLeaf)
@@ -128,12 +178,28 @@ namespace CMM
                         Constant.currentScopeIncrease();
                         ParseTreeNode stmtSequence = stmtBlock.Childs[1];
                         //stmt-sequence -> statement stmt-sequence | ε  // 语句序列
-                        while (stmtSequence.Childs.Count == 2)
+                        while (stmtSequence.Childs.Count >= 2)
+                        {
+                            for (int j = 0; j < stmtSequence.Childs.Count - 1; j++)
+                            {
+                                StatementAnalysis(stmtSequence.Childs[j]);
+                                //判断是否能运行
+                                Constant._mre.WaitOne();
+                            }
+                            stmtSequence = stmtSequence.Childs[stmtSequence.Childs.Count - 1];
+                        }
+                        if (stmtSequence.NSymbol == NEnum.statement)
+                        {
+                            StatementAnalysis(stmtSequence);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
+                        }
+                        else
                         {
                             StatementAnalysis(stmtSequence.Childs[0]);
-                            stmtSequence = stmtSequence.Childs[1];
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
                         }
-                        StatementAnalysis(stmtSequence.Childs[0]);
                         Constant.currentScopeDecrease();
                     }
                 }
@@ -147,11 +213,19 @@ namespace CMM
                     //遇到stmtBlock
                     ParseTreeNode stmtBlock = whileStmt.Childs[4];
                     //stmt - block->{statement} | { stmt - sequence }   // 语句块
-
+                    if (stmtBlock.Childs.Count == 4) {
+                        Constant.currentScopeIncrease();
+                        StatementAnalysis(stmtBlock.Childs[1]);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
+                        Constant.currentScopeDecrease();
+                        stmtBlock.Childs.RemoveAt(1);
+                    }
                     if (stmtBlock.Childs[1].NSymbol == NEnum.statement)
                     {
                         Constant.currentScopeIncrease();
                         StatementAnalysis(stmtBlock.Childs[1]);
+                        Constant._mre.WaitOne();
                         Constant.currentScopeDecrease();
                     }
 
@@ -160,12 +234,25 @@ namespace CMM
                         Constant.currentScopeIncrease();
                         ParseTreeNode stmtSequence = stmtBlock.Childs[1];
                         //stmt-sequence -> statement stmt-sequence | ε  // 语句序列
-                        while (stmtSequence.Childs.Count == 2)
+                        while (stmtSequence.Childs.Count >= 2)
                         {
-                            StatementAnalysis(stmtSequence.Childs[0]);
-                            stmtSequence = stmtSequence.Childs[1];
+                            for (int j = 0; j < stmtSequence.Childs.Count - 1; j++)
+                            {
+                                StatementAnalysis(stmtSequence.Childs[j]);
+                                //判断是否能运行
+                                Constant._mre.WaitOne();
+                            }
+                            stmtSequence = stmtSequence.Childs[stmtSequence.Childs.Count - 1];
                         }
-                        StatementAnalysis(stmtSequence.Childs[0]);
+                        if (stmtSequence.NSymbol == NEnum.statement)
+                        {
+                            StatementAnalysis(stmtSequence);
+                            Constant._mre.WaitOne();
+                        }
+                        else {
+                            StatementAnalysis(stmtSequence.Childs[0]);
+                            Constant._mre.WaitOne();
+                        }
                         Constant.currentScopeDecrease();
                     }
                 }
@@ -182,15 +269,29 @@ namespace CMM
                     string name = variable.Childs[0].StringValue;
                     //查找并赋值
                     ScopeTable scopeTable = Constant.check(name);
+                    if (scopeTable == null) {
+                        ErrorInfo error = new ErrorInfo(assignStmt.Childs[1].LineNum, "符号表中没有"+ name + "！");
+                        Constant.outputAppend(error.ToString());
+                        return;
+                    }
 
                     if (IsNumberic(expToValue(assignStmt.Childs[2])))
                     {
                         //声明的为整数时，还需将非整数转化成整数
                         if (scopeTable.type == "int")
                         {
-                            string value = int.Parse(expToValue(assignStmt.Childs[2])).ToString();
-                            scopeTable.value = value;
-                            Constant.update(scopeTable);
+                            string num = expToValue(assignStmt.Childs[2]);
+                            if (Regex.IsMatch(num, @"^[+-]?[0-9]+$"))
+                            {
+                                string value = int.Parse(num).ToString();
+                                scopeTable.value = value;
+                                Constant.update(scopeTable);
+                            }
+                            else {
+                                ErrorInfo error = new ErrorInfo(assignStmt.Childs[1].LineNum, "赋值类型错误！");
+                                Constant.outputAppend(error.ToString());
+                                return;
+                            }
                         }
                         else //real类型可以直接存入
                         {
@@ -201,7 +302,9 @@ namespace CMM
                     else
                     //返回错误
                     {
-                        ErrorInfo error = new ErrorInfo(0, "赋值类型错误！");
+                        ErrorInfo error = new ErrorInfo(assignStmt.Childs[1].LineNum, "赋值类型错误！");
+                        Constant.outputAppend(error.ToString());
+                        return;
                     }
 
                 }
@@ -210,18 +313,25 @@ namespace CMM
                 {
                     //数组名
                     string name = variable.Childs[0].StringValue;
-                    //数组长度
+                    //插入数组位置
                     int leng = int.Parse(variable.Childs[2].StringValue);
 
                     //查找
                     ScopeTable scopeTable = Constant.check(name);
+                    if (scopeTable == null) {
+                        ErrorInfo error = new ErrorInfo(assignStmt.Childs[1].LineNum, "符号表中没有" + name + "！");
+                        Constant.outputAppend(error.ToString());
+                        return;
+                    }
                     //判断是否越界
                     string type = scopeTable.type;
-                    int length = int.Parse(type.Substring(type.IndexOf('[') + 1, type.IndexOf('[') - type.IndexOf(']')));
-                    if (leng > length)
+                    string a = type.Substring(type.IndexOf('[') + 1, type.IndexOf(']') - type.IndexOf('[') - 1);
+                    int length = int.Parse(a);
+                    if (leng >= length)
                     {
-                        ErrorInfo error = new ErrorInfo(0, "数组越界错误！");
-                        MessageBox.Show("数组越界");
+                        ErrorInfo error = new ErrorInfo(variable.Childs[0].LineNum, "数组越界错误！");
+                        Constant.outputAppend(error.ToString());
+                        return;
                     }
 
                     else
@@ -235,10 +345,19 @@ namespace CMM
                             //声明的为整数时，还需将非整数转化成整数
                             if (scopeTable.type.IndexOf("int") != -1)
                             {
-                                string value2 = int.Parse(expToValue(assignStmt.Childs[2])).ToString();
-                                arr1[leng] = value2;
-                                scopeTable.value = String.Join(",", arr1);
-                                Constant.update(scopeTable);
+                                string num = expToValue(assignStmt.Childs[2]);
+                                if (Regex.IsMatch(num, @"^[+-]?[0-9]+$"))
+                                {
+                                    string value2 = int.Parse(num).ToString();
+                                    arr1[leng] = value2;
+                                    scopeTable.value = String.Join(",", arr1);
+                                    Constant.update(scopeTable);
+                                }
+                                else {
+                                    ErrorInfo error = new ErrorInfo(assignStmt.Childs[1].LineNum, "赋值类型错误！");
+                                    Constant.outputAppend(error.ToString());
+                                    return;
+                                }
                             }
                             else //real类型可以直接存入
                             {
@@ -250,8 +369,9 @@ namespace CMM
                         else
                         //返回错误
                         {
-                            ErrorInfo error = new ErrorInfo(0, "赋值类型错误！");
-                            MessageBox.Show("赋值类型错误");
+                            ErrorInfo error = new ErrorInfo(assignStmt.Childs[1].LineNum, "赋值类型错误！");
+                            Constant.outputAppend(error.ToString());
+                            return;
                         }
 
                     }
@@ -262,7 +382,30 @@ namespace CMM
             else if (node.Childs[0].NSymbol == NEnum.read_stmt)
             //read-stmt -> read variable ;   // read语句
             {
+                Constant.mreReset();
+                Constant._mre.WaitOne();
+                string num = Constant.readstr;
                 ParseTreeNode readStmt = node.Childs[0];
+                ScopeTable scopeTable = Constant.check(readStmt.Childs[1].Childs[0].StringValue);
+                if (scopeTable.type == "int")
+                {
+                    if (Regex.IsMatch(num, @"^[+-]?[0-9]+$"))
+                    {
+                        scopeTable.value = num;
+                    }
+                    else
+                    {
+                        ErrorInfo error = new ErrorInfo(readStmt.Childs[1].Childs[0].LineNum, "赋值类型错误！");
+                        Constant.outputAppend(error.ToString());
+                        return;
+                    }
+                }
+                else {
+                    scopeTable.value = num;
+                }
+                
+                Constant.update(scopeTable);
+
             }
             else if (node.Childs[0].NSymbol == NEnum.write_stmt)
             //write-stmt -> write exp ;   // write语句
@@ -275,54 +418,76 @@ namespace CMM
             //declare-stmt语句 (int | real) ( (identifier [= exp ]) | (identifier [ exp ]) ) ;
             {
                 ParseTreeNode declareStmt = node.Childs[0];
-                if ((declareStmt.Childs.Count < 4))
-                //只申明，未赋值 int a ;
-                {
-                    ScopeTable scopeTable = new ScopeTable(declareStmt.Childs[1].StringValue, declareStmt.Childs[0].StringValue, null, Constant.currentScope);
-                    Constant.scopeTables.Add(scopeTable);
-                }
-                else if (declareStmt.Childs[2].StringValue == "[")
-                //申明一个数组 int a[2];  a  int[3]   0,0,0  Constant.currentScope);
 
-                {
-                    int length = int.Parse(declareStmt.Childs[3].StringValue);
-                    string value = "";
-                    for (int i = 1; i < length; i++)
-                    {
-                        value += "0,";
-                    }
-                    value += "0";
-                    ScopeTable scopeTable = new ScopeTable(declareStmt.Childs[1].StringValue,
-                        declareStmt.Childs[0].StringValue + declareStmt.Childs[2].StringValue + declareStmt.Childs[3].StringValue + declareStmt.Childs[4].StringValue,
-                        null, Constant.currentScope);
-                    Constant.scopeTables.Add(scopeTable);
-                }
-                else
                 //声明，且赋值  int a=3;
-
+                //作废
+                if (declareStmt.Childs.Count > 3)
                 {
                     if (IsNumberic(expToValue(declareStmt.Childs[3])))
                     {
                         //声明的为整数时，还需将非整数转化成整数
                         if (declareStmt.Childs[0].StringValue == "int")
                         {
-                            string value = int.Parse(expToValue(declareStmt.Childs[3])).ToString();
-                            ScopeTable scopeTable = new ScopeTable(declareStmt.Childs[1].StringValue, declareStmt.Childs[0].StringValue, value, Constant.currentScope);
-                            Constant.scopeTables.Add(scopeTable);
+                            string num = expToValue(declareStmt.Childs[3]);
+                            if (Regex.IsMatch(num, @"^[+-]?[0-9]+$"))
+                            {
+                                string value = int.Parse(num).ToString();
+                                ScopeTable scopeTable = new ScopeTable(declareStmt.Childs[1].StringValue, declareStmt.Childs[0].StringValue, value, Constant.currentScope);
+                                Constant.scopeTables.Add(scopeTable);
+                            }
+                            else {
+                                ErrorInfo error = new ErrorInfo(0, "声明类型错误！");
+
+                            }
+                            
                         }
                         else //real类型可以直接存入
                         {
                             ScopeTable scopeTable = new ScopeTable(declareStmt.Childs[1].StringValue, declareStmt.Childs[0].StringValue, expToValue(declareStmt.Childs[3]), Constant.currentScope);
                             Constant.scopeTables.Add(scopeTable);
                         }
-
-
                     }
                     else
                     //返回错误
                     {
                         ErrorInfo error = new ErrorInfo(0, "声明类型错误！");
                     }
+                }
+                else if ((declareStmt.Childs[1].Childs.Count < 2))
+                //只申明，未赋值 int a ;
+                {
+                    ScopeTable scopeTable = new ScopeTable(declareStmt.Childs[1].Childs[0].StringValue, declareStmt.Childs[0].StringValue, null, Constant.currentScope);
+                    Constant.scopeTables.Add(scopeTable);
+                }
+                else if (declareStmt.Childs[1].Childs.Count > 2)
+                //申明一个数组 int a[2];  a  int[3]   0,0,0  Constant.currentScope);
+
+                {
+                    int length=0;
+                    try
+                    {
+                        length = int.Parse(declareStmt.Childs[1].Childs[2].StringValue);
+                    }
+                    catch {
+                        ErrorInfo error = new ErrorInfo(declareStmt.Childs[0].LineNum, "数组索引必须为整数！");
+                        Constant.outputAppend(error.ToString());
+                        return;
+                    }
+                    if (length==1) {
+                        ErrorInfo error = new ErrorInfo(declareStmt.Childs[0].LineNum, "不能声明大小为1的数组！");
+                        Constant.outputAppend(error.ToString());
+                        return;
+                    }
+                    string value = "";
+                    for (int i = 1; i < length; i++)
+                    {
+                        value += "0,";
+                    }
+                    value += "0";
+                    string n = declareStmt.Childs[1].Childs[0].StringValue;
+                    string t = declareStmt.Childs[0].StringValue + declareStmt.Childs[1].Childs[1].StringValue + declareStmt.Childs[1].Childs[2].StringValue + declareStmt.Childs[1].Childs[3].StringValue;
+                    ScopeTable scopeTable = new ScopeTable(n, t, value, Constant.currentScope);
+                    Constant.scopeTables.Add(scopeTable);
                 }
             }
         }
@@ -367,7 +532,17 @@ namespace CMM
             MSScriptControl.ScriptControl scriptControl = new MSScriptControl.ScriptControl();
             scriptControl.UseSafeSubset = true;
             scriptControl.Language = "JScript";
-            return scriptControl.Eval(nodeToString(node)).ToString();
+            string a = nodeToString(node);
+            string result="";
+            try
+            {
+                result = scriptControl.Eval(a).ToString();
+            }
+            catch {
+                Constant.outputAppend("表达式计算错误，默认返回false");
+                return "False";
+            }
+            return result;
         }
         /// <summary>
         /// 节点转字符串
@@ -381,7 +556,26 @@ namespace CMM
             {
                 if (node.TSymbol == TerminalType.ID)
                 {
-                    return Constant.check(node.StringValue).value;
+                    ScopeTable scope = Constant.check(node.StringValue);
+                    if (scope == null)
+                    {
+                        ErrorInfo error = new ErrorInfo(node.LineNum, "符号表中没有" + node.StringValue + "！");
+                        Constant.outputAppend(error.ToString());
+                        //计算出错
+                        return "<>";
+                    }else if (scope.type != "int" && scope.type != "real") {
+                        string[] arr1 = scope.value.Split(',');
+                        str += "[";
+                        for (int i = 0; i < arr1.Length; i++) {
+                            str += arr1[i] + ",";
+                        }
+                        str += "]";
+                        return str;
+                    }
+                    return scope.value;
+                } else if(node.StringValue=="<>")
+                {
+                    return "!=";
                 }
                 return node.StringValue;
             }
@@ -397,7 +591,7 @@ namespace CMM
         }
         public static bool IsNumberic(string value)
         {
-            return Regex.IsMatch(value, @"^[+-]?/d*[.]?/d*$");
+            return Regex.IsMatch(value, @"^[+-]?[0-9]+\.?[0-9]*$");
         }
     }
 }

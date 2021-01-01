@@ -15,6 +15,10 @@ namespace CMM
         /// </summary>
         private static string output="";
         /// <summary>
+        /// 输入
+        /// </summary>
+        public static string readstr = "";
+        /// <summary>
         /// 当前函数层数
         /// </summary>
         public static int currentScope=0;
@@ -26,6 +30,14 @@ namespace CMM
         /// 输出委托
         /// </summary>
         public static event Action<string> outPutAppend;
+        /// <summary>
+        /// debug输出委托
+        /// </summary>
+        public static event Action<string> debugAppend;
+        /// <summary>
+        /// debug清空委托
+        /// </summary>
+        public static event Action debugClean;
         /// <summary>
         /// 清空委托
         /// </summary>
@@ -63,6 +75,21 @@ namespace CMM
         {
             output ="";
             outPutClean();
+        }
+        /// <summary>
+        /// debug输出
+        /// </summary>
+        /// <param name="s"></param>
+        public static void deBugAppend(string s)
+        {
+            debugAppend(s);
+        }
+        /// <summary>
+        /// debug清空
+        /// </summary>
+        public static void deBugClean()
+        {
+            debugClean();
         }
         /// <summary>
         /// 当前层数-1，并去掉符号表中部分值
