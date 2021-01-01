@@ -94,7 +94,7 @@
                 <avalonEdit:TextEditor
             xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
             Name="input"
-            SyntaxHighlighting="C++"
+            SyntaxHighlighting="SQL"
             FontFamily="Consolas"
             FontSize="10pt" 
             LineNumbersForeground="Black" 
