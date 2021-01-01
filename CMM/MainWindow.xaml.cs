@@ -2,6 +2,8 @@
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Editing;
+using ICSharpCode.AvalonEdit.Highlighting;
+using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.Rendering;
 using Microsoft.Win32;
 using System;
@@ -23,6 +25,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.TextFormatting;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Xml;
 
 namespace CMM
 {
@@ -41,6 +44,8 @@ namespace CMM
         public MainWindow()
         {
             InitializeComponent();
+            XmlReader reader = XmlReader.Create("D:/迅雷下载/CMM_Interpreter/CMM/CMM.xshd");
+            input.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
             variableList = new List<string>();
             breakPoints = new Dictionary<int, Point>();
             input.TextArea.LeftMargins.Insert(0, new BreakPointMargin());
@@ -131,6 +136,8 @@ namespace CMM
                 //pos.Y = TextView.ActualHeight;
                 pos.Y += TextView.VerticalOffset;
                 VisualLine vl = TextView.GetVisualLineFromVisualTop(pos.Y);
+                if (vl == null)
+                    return;
                 TextLine tl = vl.GetTextLineByVisualYPosition(pos.Y);
                 int lineNumber = vl.FirstDocumentLine.LineNumber;
                 if (breakPoints.ContainsKey(lineNumber))
@@ -175,8 +182,6 @@ namespace CMM
             {
                 case ".":
                     {
-
-
                         data.Add(new MyCompletionData("自动补全"));
                         completionWindow.Show();
                         completionWindow.Closed += delegate {
