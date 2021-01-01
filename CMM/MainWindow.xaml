@@ -77,7 +77,7 @@
                         <Button ToolTip="debugBtn"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
                             <materialDesign:PackIcon Kind="Bug" />
                         </Button>
-                        <Button ToolTip="下一步"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                        <Button ToolTip="下一步"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Click="Next_Click">
                             <materialDesign:PackIcon Kind="StepForward" />
                         </Button>
 

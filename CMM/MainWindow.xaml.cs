@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -34,6 +35,7 @@ namespace CMM
         private bool isSave = false;
         private string inputstr="";
         private static Dictionary<int, Point> breakPoints;
+        private Interpreter interpreter; // 解释器类
         private List<String> variableList;
 
         public MainWindow()
@@ -44,6 +46,14 @@ namespace CMM
             input.TextArea.LeftMargins.Insert(0, new BreakPointMargin());
             input.TextArea.TextEntering += textEditor_TextArea_TextEntering;
             input.TextArea.TextEntered += textEditor_TextArea_TextEntered;
+
+            interpreter = new Interpreter("");
+
+            //语义分析需要使用的委托
+            Constant.outPutAppend += outputAppendText;
+            Constant.outPutClean += outputCleanText;
+            Constant.debugAppend += debugAppendText;
+            Constant.debugClean += debugCleanText;
         }
 
         //自动补全的内容类
@@ -276,6 +286,9 @@ namespace CMM
                     completionWindow.CompletionList.RequestInsertion(e);
             }
 
+            // 初始化解释器
+            this.interpreter = new Interpreter("");
+
         }
 
         private void MenuItem_File_News(object sender, RoutedEventArgs e)
@@ -417,7 +430,7 @@ namespace CMM
         /// </summary>
         /// <param name="s">输出</param>
         private void outputAppendText(string s) {
-            Dispatcher.Invoke(new Action(() => output.Text += s));
+            Dispatcher.Invoke(new Action(() => output.Text += s+"\n"));
         }
         /// <summary>
         /// 语义分析时清空输出
@@ -427,9 +440,26 @@ namespace CMM
             Dispatcher.Invoke(new Action(() => output.Text = ""));
         }
         /// <summary>
+        /// 语义分析时debug输出
+        /// </summary>
+        /// <param name="s"></param>
+        private void debugAppendText(string s)
+        {
+            Dispatcher.Invoke(new Action(() => debugBox.Text += s + "\n"));
+        }
+        /// <summary>
+        /// 语义分析时debug清空
+        /// </summary>
+        private void debugCleanText()
+        {
+            Dispatcher.Invoke(new Action(() => debugBox.Text = ""));
+        }
+        /// <summary>
         /// 调用这个方法唤醒线程，即在断点代码部分继续执行
         /// </summary>
         private void wake() {
+            string readstr = "12.3";
+            Constant.readstr = readstr;
             Constant.mreSet();
         }
 
@@ -440,7 +470,49 @@ namespace CMM
         /// <param name="e"></param>
         private void Run_Click(object sender, RoutedEventArgs e)
         {
+            // 重置输出和debug窗口
+            output.Text = "";
 
+            // 更新解释器的源代码属性
+            this.interpreter.SourceCode = input.Text;
+
+            // 获取所有断点行号
+            List<int> bpList = new List<int>();
+            foreach (int key in breakPoints.Keys)
+            {
+                bpList.Add(key);
+            }
+
+            // 运行词法和语法分析程序
+            InterpretResult result = interpreter.Run(bpList);
+            // 出错处理
+            if (!result.IsSuccess)
+            {
+                this.debugBox.Text = result.GetErrorString();
+            }
+            //SentenceAnalysis.nodeAnalysis(result.SyntacticAnalyseResult.Root);
+            Constant.scopeTables = new List<ScopeTable>();
+            Thread thread = new Thread(new ParameterizedThreadStart(threadMethod));
+            object obj = result.SyntacticAnalyseResult.Root;
+            thread.Start(obj);
+        }
+        /// <summary>
+        /// 异步运行语义分析程序
+        /// </summary>
+        /// <param name="node"></param>
+        public static void threadMethod(object node)
+        {
+            ParseTreeNode n = (ParseTreeNode)node;
+            SentenceAnalysis.nodeAnalysis(n);
+        }
+        /// <summary>
+        /// 设置断点debug时下一步，以及read后的下一步
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Next_Click(object sender, RoutedEventArgs e)
+        {
+            wake();
         }
     }
 }

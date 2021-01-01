@@ -23,7 +23,15 @@ namespace CMM
 
             // 初始化预测分析表
             this.parsingTable = new ParsingTable();
+
+            // 新建语法分析树
+            this.targetTree = new ParseTree();
         }
+
+        /// <summary>
+        /// breakPoint断点行号列表
+        /// </summary>
+        private List<int> bPLineNums;
 
         /// <summary>
         /// 记录自顶向下分析过程的符号表，以语法分析树的叶子结点作为标识
@@ -48,14 +56,17 @@ namespace CMM
         /// <summary>
         /// 利用词法分析的结果进行语法分析
         /// </summary>
-        /// <param name="tokens">由词法分析得到的token列表</param>
+        /// <param name="tokenResult">由词法分析得到的token结果</param>
+        /// <param name="bpList">断点行号列表</param>
         /// <returns>语法分析树</returns>
-        public ParseTree SyntacticAnalysis(TokenResult tokenResult)
+        public ParseTree SyntacticAnalysis(TokenResult tokenResult, List<int> bpList)
         {
-            // 开始构造语法分析树
-            this.targetTree = new ParseTree();
+            #region 语法分析初始化
 
-            bool isSuccess = true; // 表示语法分析是否成功
+            // 初始化断点列表
+            this.bPLineNums = bpList;
+
+            this.targetTree.IsSuccess = true; // 表示语法分析是否成功
             List<ErrorInfo> totalErrorInfos = new List<ErrorInfo>(); // 总的报错信息
 
             // 将所有token读入栈
@@ -72,10 +83,11 @@ namespace CMM
             symbolStack.Push(EndNode);
 
             // 将program放入符号栈
-            //ParseTreeNode programNode = new ParseTreeNode(false, TerminalType.DEFAULT, NEnum.program);
-            //symbolStack.Push(programNode);
             symbolStack.Push(targetTree.Root);
 
+            #endregion
+
+            #region 语法分析主体程序
             // 每次从输入栈中读取一个符号并更新符号栈的值
             // 当没有读到$时进行循环，如果下一个是结束符号$则结束循环
             Token token; // 输入串中的当前讨论的token
@@ -87,7 +99,7 @@ namespace CMM
                 symbolNode = symbolStack.Peek();
 
                 // 遇到注释则跳过
-                if(symbolNode.TSymbol == TerminalType.NOTES)
+                if (symbolNode.TSymbol == TerminalType.NOTES)
                 {
                     continue;
                 }
@@ -105,7 +117,6 @@ namespace CMM
                 // 遇到表达式特殊考虑
                 if (symbolNode.NSymbol == NEnum.exp)
                 {
-                    // TODO 特殊考虑表达式
                     this.ExpAnalyse(symbolNode, out expErrorInfos);
                     // 将exp出栈
                     PopSymbolStack();
@@ -116,7 +127,7 @@ namespace CMM
 
                 #region 查看M[U, a]表
                 // 由于只有exp和标识符的情况会出现递归，所以其他非终结符号直接读取产生式即可
-                List<ErrorInfo> NonErrorInfos;   // 在查找M[U,a]表时出现的错误
+                List<ErrorInfo> NonErrorInfos = new List<ErrorInfo>();   // 在查找M[U,a]表时出现的错误
                 if (symbolNode.IsLeaf)
                 {
                     // 如果符号栈栈顶是终结符号
@@ -126,13 +137,15 @@ namespace CMM
                         if (token.TokenType == TerminalType.END)
                         {
                             // 语法分析结束，语法分析成功
+                            symbolStack.Pop();
+                            inputStack.Pop();
                             break;
                         }
                         else
                         {
                             // TODO 语法分析出错处理
-                            
-                            isSuccess = false;
+                            ErrorEncapsulation("程序结尾存在多余字符串");
+                            //isSuccess = false;
                         }
                     }
 
@@ -150,8 +163,7 @@ namespace CMM
                     else
                     {
                         // TODO　语法分析出错处理
-
-                        isSuccess = false;
+                        ErrorEncapsulation($"缺少符号 '{T2String(symbolNode.TSymbol)}'");
                     }
                 }
                 else
@@ -160,15 +172,18 @@ namespace CMM
                     if (!LookUpTable(symbolNode, out NonErrorInfos))
                     {
                         // TODO 出错处理
-
-                        isSuccess = false;
+                        ErrorEncapsulation($"语法成分 '{N2String(symbolNode.NSymbol)}' 不能以" +
+                            $" '{T2String(token.TokenType)}' 符号开头");
                     }
                 }
                 #endregion
             }
+            #endregion
 
             // 返回构建好的语法分析树
-            this.targetTree.IsSuccess = isSuccess;
+            //this.targetTree.IsSuccess = isSuccess;
+            this.targetTree.ErrorInfos = this.targetTree.ErrorInfos.OrderBy(e => e.LineNum).ToList();
+
             return this.targetTree;
         }
 
@@ -270,8 +285,7 @@ namespace CMM
             if (!ProcessNextTerminal(symbolNode, TerminalType.ID))
             {
                 // TODO 出错处理
-
-                isSuccess = false;
+                ErrorEncapsulation($"源码此处是 '{inputStack.Peek().StrValue}' 缺少语法成分 '标识符'");
             }
 
             // 再判断之后有没有[
@@ -283,14 +297,14 @@ namespace CMM
                 if (isSuccess && !ProcessNextTerminal(symbolNode, TerminalType.INTVAL))
                 {
                     // TODO 出错处理
-
+                    ErrorEncapsulation("数组索引应为正整数");
                     isSuccess = false;
                 }
 
                 if (isSuccess && !ProcessNextTerminal(symbolNode, TerminalType.RBRACKET))
                 {
                     // TODO 出错处理
-
+                    ErrorEncapsulation("数组索引右括号 ']' 缺失");
                     isSuccess = false;
                 }
             }
@@ -366,12 +380,12 @@ namespace CMM
             if (productions == null || productions.Count == 0)
             {
                 // TODO 语法分析错误处理
-
                 isSuccess = false;
             }
             else
             {
                 List<ParseTreeNode> production = productions[0].production;
+
                 // 生成对应的树结点，并设置子树
                 for (int i = 0; i < production.Count; i++)
                 {
@@ -389,14 +403,39 @@ namespace CMM
                 for (int i = symbolNode.Childs.Count - 1; i >= 0; i--)
                 {
                     // 对于“空”终结符号，则不push任何符号
-                    if (symbolNode.Childs[i].TSymbol != TerminalType.EMPTY)
+                    // 对于“断点”，不push任何符号
+                    if (symbolNode.Childs[i].TSymbol != TerminalType.EMPTY &&
+                        symbolNode.Childs[i].TSymbol != TerminalType.BREAKPOINT)
                     {
                         symbolStack.Push(symbolNode.Childs[i]);
                     }
                 }
 
+                // 断点处理
+                // 如果对应的token是断点所在行，则加入断点
+                // 如果是stmtblock和stmtsequence均需要断点处理
+                treeNode = new ParseTreeNode(false, TerminalType.DEFAULT,
+                    NEnum.statement);
+                treeNode.Childs.Add(new ParseTreeNode(true, TerminalType.BREAKPOINT,
+                    NEnum.DEFAULT));
+                if (symbolNode.NSymbol == NEnum.stmt_sequence &&
+                    production[0].TSymbol != TerminalType.EMPTY &&
+                    this.bPLineNums.Contains(token.LineNum))
+                {
+                    // stmt-sequence
+                    symbolNode.Childs.Insert(0, treeNode);
+                }
+                //if (symbolNode.NSymbol == NEnum.stmt_block &&
+                //    production[0].TSymbol != TerminalType.EMPTY &&
+                //    (this.bPLineNums.Contains(token.LineNum) || 
+                //    this.bPLineNums.Contains(token.LineNum + 1)))
+                //{
+                //    // stmt-block
+                //    symbolNode.Childs.Insert(1, treeNode);
+                //}
+
                 // 如果是Empty，则还应将符号栈栈顶元素出栈
-                if(production[0].TSymbol == TerminalType.EMPTY)
+                if (production[0].TSymbol == TerminalType.EMPTY)
                 {
                     PopSymbolStack(true);
                 }
@@ -425,7 +464,7 @@ namespace CMM
             List<ErrorInfo> errorInfosAddtive_1;
             if (!AddtiveExpAnalyse(treeNode, out errorInfosAddtive_1))
             {
-                // 出错处理
+                // TODO 出错处理
 
                 isSuccess = false;
             }
@@ -444,7 +483,7 @@ namespace CMM
                 List<ErrorInfo> errorInfosAddtive_2;
                 if (!AddtiveExpAnalyse(treeNode, out errorInfosAddtive_2))
                 {
-                    // 出错处理
+                    // TODO 出错处理
 
                     isSuccess = false;
                 }
@@ -476,7 +515,7 @@ namespace CMM
             if(!TermAnalyse(treeNode, out termErrorInfos))
             {
                 // TODO 错误处理
-                Error();
+                //Error();
                 isSuccess = false;
             }
             #endregion
@@ -494,7 +533,7 @@ namespace CMM
                 if(!AddtiveExpAnalyse(treeNode, out addtiveExpErrorInfos))
                 {
                     // TODO 出错处理
-                    Error();
+                    //Error();
                     isSuccess = false;
                 }
 
@@ -527,7 +566,7 @@ namespace CMM
             if(!FactorAnalyse(treeNode, out factorErrorInfos))
             {
                 // 出错处理
-                Error();
+                //Error();
                 isSuccess = false;
             }
             #endregion
@@ -544,7 +583,7 @@ namespace CMM
                 if(!TermAnalyse(treeNode, out termErrorInfos))
                 {
                     // 出错处理
-                    Error();
+                    //Error();
                     isSuccess = false;
                 }
                 #endregion
@@ -579,11 +618,13 @@ namespace CMM
 
                 if(!ProcessNextTerminal(fatherNode, TerminalType.RPARENT))
                 {
-                    // 出错处理
+                    // TODO 出错处理
+                    ErrorEncapsulation("表达式中右括号未闭合");
                     isSuccess = false;
                 }
 
-            }else if(ProcessNextTerminal(fatherNode, TerminalType.INTVAL))
+            }else if(ProcessNextTerminal(fatherNode, TerminalType.INTVAL,
+                TerminalType.REALVAL))
             {
                 // number
                 // factor此时语法分析结束
@@ -593,8 +634,8 @@ namespace CMM
                 // add-op exp
                 if(!ExpAnalyse(fatherNode, out addOpErrorInfos))
                 {
-                    // 出错处理
-                    Error();
+                    // TODO 出错处理
+                    //Error();
                     isSuccess = false;
                 }
             }
@@ -612,6 +653,32 @@ namespace CMM
         }
 
         /// <summary>
+        /// 出错处理程序的封装
+        /// 1. 封装出错信息和行数(默认为inputStack栈顶token的行号)
+        /// 2. 进行"式后字"寻找的出错处理程序
+        /// </summary>
+        /// <param name="message">出错处理信息</param>
+        /// <param name="lineNum">可以手动添加错误所在行数</param>
+        private void ErrorEncapsulation(string message, int lineNum = -1)
+        {
+
+            // 添加到语法分析树的ErrorInfos列表
+            int actualLineNum = lineNum;
+            if(lineNum == -1)
+            {
+                actualLineNum = inputStack.Peek().LineNum;
+            }
+
+            this.targetTree.ErrorInfos.Add(new ErrorInfo(actualLineNum, message));
+
+            // 进行"式后字"寻找和处理
+            Error();
+
+            // 更新IsSuccess值
+            this.targetTree.IsSuccess = false;
+        }
+
+        /// <summary>
         /// 出错处理程序
         /// </summary>
         private void Error()
@@ -626,7 +693,8 @@ namespace CMM
             // 如果是终结符号则直接出栈
             if (symbolNode.IsLeaf)
             {
-                symbolStack.Pop();
+                //symbolStack.Pop();
+                PopSymbolStack();
                 if(inputStack.Count > 0)
                 {
                     inputStack.Pop();
@@ -765,11 +833,17 @@ namespace CMM
             Token token; // 记录输入串栈顶的符号
 
             // 将symbolStack栈顶出栈
-            this.symbolStack.Pop();
+            //this.symbolStack.Pop();
+            PopSymbolStack();
 
             // 寻找式后字并将输入符号串出栈
             while(inputStack.Count > 0)
             {
+                if (tEnums.Contains(inputStack.Peek().TokenType))
+                {
+                    break;   
+                }
+
                 token = inputStack.Pop();
 
                 // 如果找到了式后字，则将输入串放回栈顶
@@ -778,6 +852,203 @@ namespace CMM
                     inputStack.Push(token);
                 }
             }
+        }
+
+        /// <summary>
+        /// 将终结符号的枚举转换为字符串
+        /// </summary>
+        /// <param name="T">终结符号枚举</param>
+        /// <returns>对应的字符串</returns>
+        public string T2String(TerminalType T)
+        {
+            string resultString;
+            switch (T)
+            {
+                case TerminalType.IF:
+                    resultString = "if";
+                    break;
+                case TerminalType.ELSE:
+                    resultString = "else";
+                    break;
+                case TerminalType.WHILE:
+                    resultString = "while";
+                    break;
+                case TerminalType.READ:
+                    resultString = "read";
+                    break;
+                case TerminalType.WRITE:
+                    resultString = "write";
+                    break;
+                case TerminalType.INT:
+                    resultString = "int";
+                    break;
+                case TerminalType.REAL:
+                    resultString = "real";
+                    break;
+                case TerminalType.PLUS:
+                    resultString = "+";
+                    break;
+                case TerminalType.MINUS:
+                    resultString = "-";
+                    break;
+                case TerminalType.MUL:
+                    resultString = "*";
+                    break;
+                case TerminalType.DIV:
+                    resultString = "/";
+                    break;
+                case TerminalType.ASSIGN:
+                    resultString = "=";
+                    break;
+                case TerminalType.LESS:
+                    resultString = "<";
+                    break;
+                case TerminalType.GREATER:
+                    resultString = ">";
+                    break;
+                case TerminalType.EQUAL:
+                    resultString = "==";
+                    break;
+                case TerminalType.NOTEQUAL:
+                    resultString = "<>";
+                    break;
+                case TerminalType.LPARENT:
+                    resultString = "(";
+                    break;
+                case TerminalType.RPARENT:
+                    resultString = ")";
+                    break;
+                case TerminalType.SEMI:
+                    resultString = ";";
+                    break;
+                case TerminalType.LBRACE:
+                    resultString = "{";
+                    break;
+                case TerminalType.RBRACE:
+                    resultString = "}";
+                    break;
+                case TerminalType.NOTES:
+                    resultString = "/**/";
+                    break;
+                case TerminalType.LBRACKET:
+                    resultString = "[";
+                    break;
+                case TerminalType.RBRACKET:
+                    resultString = "]";
+                    break;
+                case TerminalType.COMMA:
+                    resultString = ",";
+                    break;
+                case TerminalType.INTVAL:
+                    resultString = "整数类型的值";
+                    break;
+                case TerminalType.REALVAL:
+                    resultString = "浮点类型的值";
+                    break;
+                case TerminalType.ID:
+                    resultString = "标识符";
+                    break;
+                case TerminalType.ERR:
+                    resultString = "错误信息";
+                    break;
+                case TerminalType.END:
+                    resultString = "程序结束标志";
+                    break;
+                case TerminalType.EMPTY:
+                    resultString = "'空'";
+                    break;
+                case TerminalType.BREAKPOINT:
+                    resultString = "断点";
+                    break;
+                case TerminalType.DEFAULT:
+                    resultString = "默认终结符号";
+                    break;
+                default:
+                    resultString = "";
+                    break;
+            }
+            return resultString;
+        }
+
+        /// <summary>
+        /// 将非终结符号串转换为字符串
+        /// </summary>
+        /// <param name="N">待转换的非终结符号串</param>
+        /// <returns>终结符号串对应的字符串</returns>
+        public string N2String(NEnum N)
+        {
+            string resultString;
+            switch (N)
+            {
+                case NEnum.program:
+                    resultString = "主程序";
+                    break;
+                case NEnum.stmt_sequence:
+                    resultString = "语句序列";
+                    break;
+                case NEnum.statement:
+                    resultString = "语句";
+                    break;
+                case NEnum.stmt_block:
+                    resultString = "语句块";
+                    break;
+                case NEnum.if_stmt:
+                    resultString = "if语句";
+                    break;
+                case NEnum.if_stmt_block:
+                    resultString = "if语句块";
+                    break;
+                case NEnum.else_stmt_block:
+                    resultString = "else语句块";
+                    break;
+                case NEnum.while_stmt:
+                    resultString = "while语句块";
+                    break;
+                case NEnum.assign_stmt:
+                    resultString = "赋值语句";
+                    break;
+                case NEnum.read_stmt:
+                    resultString = "read语句";
+                    break;
+                case NEnum.write_stmt:
+                    resultString = "write语句";
+                    break;
+                case NEnum.declare_stmt:
+                    resultString = "声明语句";
+                    break;
+                case NEnum.variable:
+                    resultString = "变量";
+                    break;
+                case NEnum.exp:
+                    resultString = "表达式";
+                    break;
+                case NEnum.addtive_exp:
+                    resultString = "加法表达式";
+                    break;
+                case NEnum.term:
+                    resultString = "term";
+                    break;
+                case NEnum.factor:
+                    resultString = "表达式计算因子";
+                    break;
+                case NEnum.logical_op:
+                    resultString = "逻辑表达式符号";
+                    break;
+                case NEnum.add_op:
+                    resultString = "加减运算符号";
+                    break;
+                case NEnum.mul_op:
+                    resultString = "乘法符号";
+                    break;
+                case NEnum.DEFAULT:
+                    resultString = "默认";
+                    break;
+                default:
+                    resultString = "";
+                    break;
+            }
+
+            return resultString;
         }
     }
 }

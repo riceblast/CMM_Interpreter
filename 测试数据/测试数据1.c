@@ -1,24 +1,45 @@
+/*声明、赋值、运算测试*/
+
 /*声明语句*/
 int a;
-int b,c;
+int b;
+real c;
+real d;
+real e;
+real f;
+
 
 /*赋值语句*/
-a=1;
-b=2;
-
-/*声明时进行*/
-real d=1.0;
-real e=1.5;
+a = 1;
+b = 2;
+d = 1.0;
+e = 1.5;
 
 /*表达式*/
-float d;
-c=a+b;
-write(c);//output:3
-c=b-a;
-write(c);//output:1
-c=a*b;
-write(c);//output:2
-c=a/b;
-write(c);//output:0
-real f=d+e;
-write(f);//output:2.5
+c = a + b;
+write c;
+c = b - a;
+write c;
+c = a * b;
+write c;
+c = a / b;
+write c;
+
+f = d + e;
+write f;
+f = e - d
+write f;
+f = d * e;
+write f;
+f = d / e;
+write f;
+
+/*补充测试<>比较符*/
+if (a <> b) {
+	write a <> b;
+}
+
+/*补充测试==比较符*/
+if (a == b) {
+	write a == b;
+}

@@ -40,5 +40,17 @@ namespace CMM
             this.LineNum = lineNum;
             this.Message = message;
         }
+
+        /// <summary>
+        /// 报错信息的字符串形式
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            string errorString;
+
+            errorString = $"行号({this.LineNum}), 错误信息: {this.Message}";
+            return errorString;
+        }
     }
 }
