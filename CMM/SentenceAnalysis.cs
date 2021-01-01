@@ -42,6 +42,8 @@ namespace CMM
                 {
                     case NEnum.statement:
                         StatementAnalysis(node);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
                         break;
                     default:
                         nodeAnalysis(node);
@@ -59,18 +61,18 @@ namespace CMM
             //判断是不是断点
             if (node.Childs[0].TSymbol== TerminalType.BREAKPOINT)
             {
-                Constant.outputAppend("-------");
+                Constant.deBugAppend("-------");
                 foreach (ScopeTable scope in Constant.scopeTables) {
 
                     if (String.IsNullOrEmpty(scope.value))
                     {
-                        Constant.outputAppend("符号表中名为" + scope.name + "的表项值为空");
+                        Constant.deBugAppend("符号表中名为" + scope.name + "的表项值为空");
                     }
                     else {
-                        Constant.outputAppend("符号表中名为" + scope.name + "的表项值为" + scope.value);
+                        Constant.deBugAppend("符号表中名为" + scope.name + "的表项值为" + scope.value);
                     }
                 }
-                Constant.outputAppend("-------");
+                Constant.deBugAppend("-------");
                 //如果是断点则阻塞线程
                 Constant.mreReset();
                 return;
@@ -96,11 +98,21 @@ namespace CMM
                     //遇到stmtBlock
                     ParseTreeNode stmtBlock = ifStmtBlock.Childs[4];
                     //stmt - block->{statement} | { stmt - sequence }   // 语句块
-
+                    if (stmtBlock.Childs.Count == 4)
+                    {
+                        Constant.currentScopeIncrease();
+                        StatementAnalysis(stmtBlock.Childs[1]);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
+                        Constant.currentScopeDecrease();
+                        stmtBlock.Childs.RemoveAt(1);
+                    }
                     if (stmtBlock.Childs[1].NSymbol == NEnum.statement)
                     {
                         Constant.currentScopeIncrease();
                         StatementAnalysis(stmtBlock.Childs[1]);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
                         Constant.currentScopeDecrease();
                     }
 
@@ -112,9 +124,22 @@ namespace CMM
                         while (stmtSequence.Childs.Count == 2)
                         {
                             StatementAnalysis(stmtSequence.Childs[0]);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
                             stmtSequence = stmtSequence.Childs[1];
                         }
-                        StatementAnalysis(stmtSequence.Childs[0]);
+                        if (stmtSequence.NSymbol == NEnum.statement)
+                        {
+                            StatementAnalysis(stmtSequence);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
+                        }
+                        else
+                        {
+                            StatementAnalysis(stmtSequence.Childs[0]);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
+                        }
                         Constant.currentScopeDecrease();
                     }
                 }
@@ -129,11 +154,21 @@ namespace CMM
                     ParseTreeNode elseStmtBlock = ifStmt.Childs[1];
                     ParseTreeNode stmtBlock = elseStmtBlock.Childs[1];
                     //stmt - block->{statement }| { stmt - sequence }   // 语句块
-
+                    if (stmtBlock.Childs.Count == 4)
+                    {
+                        Constant.currentScopeIncrease();
+                        StatementAnalysis(stmtBlock.Childs[1]);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
+                        Constant.currentScopeDecrease();
+                        stmtBlock.Childs.RemoveAt(1);
+                    }
                     if (stmtBlock.Childs[1].NSymbol == NEnum.statement)
                     {
                         Constant.currentScopeIncrease();
                         StatementAnalysis(stmtBlock.Childs[1]);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
                         Constant.currentScopeDecrease();
                     }
                     else if (!stmtBlock.Childs[1].IsLeaf)
@@ -144,9 +179,22 @@ namespace CMM
                         while (stmtSequence.Childs.Count == 2)
                         {
                             StatementAnalysis(stmtSequence.Childs[0]);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
                             stmtSequence = stmtSequence.Childs[1];
                         }
-                        StatementAnalysis(stmtSequence.Childs[0]);
+                        if (stmtSequence.NSymbol == NEnum.statement)
+                        {
+                            StatementAnalysis(stmtSequence);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
+                        }
+                        else
+                        {
+                            StatementAnalysis(stmtSequence.Childs[0]);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
+                        }
                         Constant.currentScopeDecrease();
                     }
                 }
@@ -172,6 +220,7 @@ namespace CMM
                     {
                         Constant.currentScopeIncrease();
                         StatementAnalysis(stmtBlock.Childs[1]);
+                        Constant._mre.WaitOne();
                         Constant.currentScopeDecrease();
                     }
 
@@ -190,9 +239,11 @@ namespace CMM
                         if (stmtSequence.NSymbol == NEnum.statement)
                         {
                             StatementAnalysis(stmtSequence);
+                            Constant._mre.WaitOne();
                         }
                         else {
                             StatementAnalysis(stmtSequence.Childs[0]);
+                            Constant._mre.WaitOne();
                         }
                         Constant.currentScopeDecrease();
                     }
@@ -210,6 +261,11 @@ namespace CMM
                     string name = variable.Childs[0].StringValue;
                     //查找并赋值
                     ScopeTable scopeTable = Constant.check(name);
+                    if (scopeTable == null) {
+                        ErrorInfo error = new ErrorInfo(assignStmt.Childs[1].LineNum, "符号表中没有"+ name + "！");
+                        Constant.outputAppend(error.ToString());
+                        return;
+                    }
 
                     if (IsNumberic(expToValue(assignStmt.Childs[2])))
                     {
@@ -254,6 +310,11 @@ namespace CMM
 
                     //查找
                     ScopeTable scopeTable = Constant.check(name);
+                    if (scopeTable == null) {
+                        ErrorInfo error = new ErrorInfo(assignStmt.Childs[1].LineNum, "符号表中没有" + name + "！");
+                        Constant.outputAppend(error.ToString());
+                        return;
+                    }
                     //判断是否越界
                     string type = scopeTable.type;
                     string a = type.Substring(type.IndexOf('[') + 1, type.IndexOf(']') - type.IndexOf('[') - 1);
@@ -464,7 +525,16 @@ namespace CMM
             scriptControl.UseSafeSubset = true;
             scriptControl.Language = "JScript";
             string a = nodeToString(node);
-            return scriptControl.Eval(a).ToString();
+            string result="";
+            try
+            {
+                result = scriptControl.Eval(a).ToString();
+            }
+            catch {
+                Constant.outputAppend("表达式计算错误，默认返回false");
+                return "False";
+            }
+            return result;
         }
         /// <summary>
         /// 节点转字符串
@@ -479,16 +549,24 @@ namespace CMM
                 if (node.TSymbol == TerminalType.ID)
                 {
                     ScopeTable scope = Constant.check(node.StringValue);
-                    if (scope.type != "int" && scope.type != "real") {
+                    if (scope == null)
+                    {
+                        ErrorInfo error = new ErrorInfo(node.LineNum, "符号表中没有" + node.StringValue + "！");
+                        Constant.outputAppend(error.ToString());
+                        //计算出错
+                        return "<>";
+                    }else if (scope.type != "int" && scope.type != "real") {
                         string[] arr1 = scope.value.Split(',');
                         str += "[";
-                        for (int i=0;i<arr1.Length;i++) {
+                        for (int i = 0; i < arr1.Length; i++) {
                             str += arr1[i] + ",";
                         }
                         str += "]";
                         return str;
                     }
-                    return Constant.check(node.StringValue).value;
+                } else if(node.StringValue=="<>")
+                {
+                    return "!=";
                 }
                 return node.StringValue;
             }

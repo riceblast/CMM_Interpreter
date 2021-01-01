@@ -52,6 +52,8 @@ namespace CMM
             //语义分析需要使用的委托
             Constant.outPutAppend += outputAppendText;
             Constant.outPutClean += outputCleanText;
+            Constant.debugAppend += debugAppendText;
+            Constant.debugClean += debugCleanText;
         }
 
         //自动补全的内容类
@@ -438,6 +440,21 @@ namespace CMM
             Dispatcher.Invoke(new Action(() => output.Text = ""));
         }
         /// <summary>
+        /// 语义分析时debug输出
+        /// </summary>
+        /// <param name="s"></param>
+        private void debugAppendText(string s)
+        {
+            Dispatcher.Invoke(new Action(() => debugBox.Text += s + "\n"));
+        }
+        /// <summary>
+        /// 语义分析时debug清空
+        /// </summary>
+        private void debugCleanText()
+        {
+            Dispatcher.Invoke(new Action(() => debugBox.Text = ""));
+        }
+        /// <summary>
         /// 调用这个方法唤醒线程，即在断点代码部分继续执行
         /// </summary>
         private void wake() {
@@ -465,20 +482,16 @@ namespace CMM
 
             // 运行词法和语法分析程序
             InterpretResult result = interpreter.Run(bpList);
-
             // 出错处理
             if (!result.IsSuccess)
             {
                 this.debugBox.Text = result.GetErrorString();
-                return;
             }
-
             //SentenceAnalysis.nodeAnalysis(result.SyntacticAnalyseResult.Root);
+            Constant.scopeTables = new List<ScopeTable>();
             Thread thread = new Thread(new ParameterizedThreadStart(threadMethod));
             object obj = result.SyntacticAnalyseResult.Root;
             thread.Start(obj);
-
-
         }
         /// <summary>
         /// 异步运行语义分析程序
