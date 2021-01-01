@@ -57,10 +57,23 @@ namespace CMM
         public static void StatementAnalysis(ParseTreeNode node)
         {
             //判断是不是断点
-            if (false)
+            if (node.Childs[0].TSymbol== TerminalType.BREAKPOINT)
             {
+                Constant.outputAppend("-------");
+                foreach (ScopeTable scope in Constant.scopeTables) {
+
+                    if (String.IsNullOrEmpty(scope.value))
+                    {
+                        Constant.outputAppend("符号表中名为" + scope.name + "的表项值为空");
+                    }
+                    else {
+                        Constant.outputAppend("符号表中名为" + scope.name + "的表项值为" + scope.value);
+                    }
+                }
+                Constant.outputAppend("-------");
                 //如果是断点则阻塞线程
                 Constant.mreReset();
+                return;
             }
             //判断是否能运行
             Constant._mre.WaitOne();
@@ -147,7 +160,14 @@ namespace CMM
                     //遇到stmtBlock
                     ParseTreeNode stmtBlock = whileStmt.Childs[4];
                     //stmt - block->{statement} | { stmt - sequence }   // 语句块
-
+                    if (stmtBlock.Childs.Count == 4) {
+                        Constant.currentScopeIncrease();
+                        StatementAnalysis(stmtBlock.Childs[1]);
+                        //判断是否能运行
+                        Constant._mre.WaitOne();
+                        Constant.currentScopeDecrease();
+                        stmtBlock.Childs.RemoveAt(1);
+                    }
                     if (stmtBlock.Childs[1].NSymbol == NEnum.statement)
                     {
                         Constant.currentScopeIncrease();
@@ -163,9 +183,17 @@ namespace CMM
                         while (stmtSequence.Childs.Count == 2)
                         {
                             StatementAnalysis(stmtSequence.Childs[0]);
+                            //判断是否能运行
+                            Constant._mre.WaitOne();
                             stmtSequence = stmtSequence.Childs[1];
                         }
-                        StatementAnalysis(stmtSequence.Childs[0]);
+                        if (stmtSequence.NSymbol == NEnum.statement)
+                        {
+                            StatementAnalysis(stmtSequence);
+                        }
+                        else {
+                            StatementAnalysis(stmtSequence.Childs[0]);
+                        }
                         Constant.currentScopeDecrease();
                     }
                 }
@@ -366,7 +394,21 @@ namespace CMM
                 //申明一个数组 int a[2];  a  int[3]   0,0,0  Constant.currentScope);
 
                 {
-                    int length = int.Parse(declareStmt.Childs[1].Childs[2].StringValue);
+                    int length=0;
+                    try
+                    {
+                        length = int.Parse(declareStmt.Childs[1].Childs[2].StringValue);
+                    }
+                    catch {
+                        ErrorInfo error = new ErrorInfo(declareStmt.Childs[0].LineNum, "数组索引必须为整数！");
+                        Constant.outputAppend(error.ToString());
+                        return;
+                    }
+                    if (length==1) {
+                        ErrorInfo error = new ErrorInfo(declareStmt.Childs[0].LineNum, "不能声明大小为1的数组！");
+                        Constant.outputAppend(error.ToString());
+                        return;
+                    }
                     string value = "";
                     for (int i = 1; i < length; i++)
                     {
@@ -421,7 +463,8 @@ namespace CMM
             MSScriptControl.ScriptControl scriptControl = new MSScriptControl.ScriptControl();
             scriptControl.UseSafeSubset = true;
             scriptControl.Language = "JScript";
-            return scriptControl.Eval(nodeToString(node)).ToString();
+            string a = nodeToString(node);
+            return scriptControl.Eval(a).ToString();
         }
         /// <summary>
         /// 节点转字符串
@@ -435,6 +478,16 @@ namespace CMM
             {
                 if (node.TSymbol == TerminalType.ID)
                 {
+                    ScopeTable scope = Constant.check(node.StringValue);
+                    if (scope.type != "int" && scope.type != "real") {
+                        string[] arr1 = scope.value.Split(',');
+                        str += "[";
+                        for (int i=0;i<arr1.Length;i++) {
+                            str += arr1[i] + ",";
+                        }
+                        str += "]";
+                        return str;
+                    }
                     return Constant.check(node.StringValue).value;
                 }
                 return node.StringValue;
